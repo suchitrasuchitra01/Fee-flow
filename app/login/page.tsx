@@ -23,8 +23,20 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    const { data } = await supabase.from("profiles").select("role").single();
-    router.replace(data?.role === "admin" ? "/admin" : "/student");
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user!.id)
+      .maybeSingle();
+
+    if (profileError) {
+      setError("Could not verify your portal access. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    router.replace(profile?.role === "admin" ? "/admin" : "/student");
     router.refresh();
   }
 

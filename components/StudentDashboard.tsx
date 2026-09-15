@@ -19,7 +19,7 @@ export default function StudentDashboard() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return router.replace("/login");
-      const { data } = await supabase.from("students").select("*").eq("id", user.id).single();
+      const { data } = await supabase.from("students").select("*").eq("email", user.email).maybeSingle();
       if (!data) return router.replace("/login");
       setStudent(data);
       setLoading(false);

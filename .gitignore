@@ -4,6 +4,7 @@
 
 node_modules/
 .next/
+tsconfig.tsbuildinfo
 
 *.log
 .DS_Store
