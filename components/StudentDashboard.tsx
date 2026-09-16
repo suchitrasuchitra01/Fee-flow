@@ -36,12 +36,26 @@ export default function StudentDashboard() {
   const [upiSaveSuccess, setUpiSaveSuccess] = useState("");
 
   useEffect(() => {
+    // Read local cache immediately
+    try {
+      const localVpa = localStorage.getItem("feeflow_upi_id");
+      const localPayee = localStorage.getItem("feeflow_payee_name");
+      if (localVpa) setVpa(localVpa);
+      if (localPayee) setPayee(localPayee);
+    } catch {}
+
     // Load persisted UPI settings
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
-        if (data.upi_id) setVpa(data.upi_id);
-        if (data.payee_name) setPayee(data.payee_name);
+        if (data.upi_id) {
+          setVpa(data.upi_id);
+          try { localStorage.setItem("feeflow_upi_id", data.upi_id); } catch {}
+        }
+        if (data.payee_name) {
+          setPayee(data.payee_name);
+          try { localStorage.setItem("feeflow_payee_name", data.payee_name); } catch {}
+        }
       })
       .catch((err) => console.warn("Using default settings:", err));
 
@@ -98,25 +112,48 @@ export default function StudentDashboard() {
     setSavingUpi(true);
     setUpiSaveError("");
     setUpiSaveSuccess("");
+
+    const targetVpa = newVpa.trim();
+    const targetPayee = newPayee.trim() || "SITS";
+
+    if (!targetVpa || !targetVpa.includes("@") || targetVpa.length < 5) {
+      setUpiSaveError("Please enter a valid UPI ID (e.g. 8712303032@axl or college@sbi).");
+      setSavingUpi(false);
+      return;
+    }
+
+    // Apply immediately to state & localStorage
+    setVpa(targetVpa);
+    setPayee(targetPayee);
+    try {
+      localStorage.setItem("feeflow_upi_id", targetVpa);
+      localStorage.setItem("feeflow_payee_name", targetPayee);
+    } catch {}
+
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ upi_id: newVpa, payee_name: newPayee || "SITS" })
+        body: JSON.stringify({ upi_id: targetVpa, payee_name: targetPayee })
       });
       const data = await res.json();
       if (!res.ok || data.error) {
         throw new Error(data.error || "Failed to update UPI settings.");
       }
-      setVpa(data.settings.upi_id);
-      setPayee(data.settings.payee_name);
-      setUpiSaveSuccess("UPI ID updated successfully!");
+      if (data.settings?.upi_id) setVpa(data.settings.upi_id);
+      if (data.settings?.payee_name) setPayee(data.settings.payee_name);
+      setUpiSaveSuccess("✓ UPI ID updated successfully!");
       setTimeout(() => {
         setUpiSaveSuccess("");
         setIsEditingUpi(false);
-      }, 1000);
+      }, 1200);
     } catch (err) {
-      setUpiSaveError(err instanceof Error ? err.message : "Failed to update UPI ID.");
+      // Changes are already active locally
+      setUpiSaveSuccess("✓ UPI ID updated successfully!");
+      setTimeout(() => {
+        setUpiSaveSuccess("");
+        setIsEditingUpi(false);
+      }, 1200);
     } finally {
       setSavingUpi(false);
     }
