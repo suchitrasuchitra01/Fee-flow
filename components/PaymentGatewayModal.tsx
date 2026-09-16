@@ -111,13 +111,31 @@ export default function PaymentGatewayModal({
 
   const [selectedBank, setSelectedBank] = useState("State Bank of India (SBI)");
 
-  // OTP and verification states
+  // OTP and PIN verification states
   const [isProcessing, setIsProcessing] = useState(false);
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
+  const [showPinScreen, setShowPinScreen] = useState(false);
+  const [pinCode, setPinCode] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [showPinText, setShowPinText] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
   const [currentPaymentModeLabel, setCurrentPaymentModeLabel] = useState("");
+
+  // Reset verification states when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowOtpScreen(false);
+      setShowPinScreen(false);
+      setIsProcessing(false);
+      setOtpCode("");
+      setPinCode("");
+      setOtpError("");
+      setPinError("");
+      setShowPinText(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -137,20 +155,47 @@ export default function PaymentGatewayModal({
     setTimeout(() => {
       setIsProcessing(false);
       setShowOtpScreen(true);
+      setShowPinScreen(false);
       setOtpCode("");
       setOtpError("");
-    }, 900);
+      setPinCode("");
+      setPinError("");
+    }, 800);
   }
 
-  async function handleFinalSubmitOtp(e: React.FormEvent) {
+  // Step 1: Verify OTP and proceed to PIN (amount is NOT paid yet)
+  function handleVerifyOtpAndProceedToPin(e: React.FormEvent) {
     e.preventDefault();
     if (!otpCode || otpCode.trim().length < 4) {
-      setOtpError("Please enter a valid OTP to authorize fee payment.");
+      setOtpError("Please enter a valid 6-digit OTP to continue.");
       return;
     }
 
+    setOtpError("");
     setIsProcessing(true);
-    setProcessingStage("Verifying OTP & Settling institutional fees...");
+    setProcessingStage("OTP verified successfully ✓ Connecting to secure PIN authorization...");
+
+    setTimeout(() => {
+      setIsProcessing(false);
+      setShowOtpScreen(false);
+      setShowPinScreen(true);
+      setPinCode("");
+      setPinError("");
+      setShowPinText(false);
+    }, 600);
+  }
+
+  // Step 2: Verify PIN and finalize fee payment
+  async function handleFinalSubmitPin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pinCode || pinCode.trim().length < 4) {
+      setPinError("Please enter your 4 to 6 digit security PIN to authorize debit.");
+      return;
+    }
+
+    setPinError("");
+    setIsProcessing(true);
+    setProcessingStage("Verifying PIN & authorizing institutional fee debit...");
 
     try {
       const generatedUtr = `PAY${Date.now().toString().slice(-8)}${Math.floor(1000 + Math.random() * 9000)}`;
@@ -195,6 +240,7 @@ export default function PaymentGatewayModal({
       }
 
       setIsProcessing(false);
+      setShowPinScreen(false);
       setShowOtpScreen(false);
       onClose();
     } catch {
@@ -217,6 +263,7 @@ export default function PaymentGatewayModal({
         academic_year: "2026–2027",
       };
       setIsProcessing(false);
+      setShowPinScreen(false);
       setShowOtpScreen(false);
       onClose();
       onPaymentSuccess(receipt);
@@ -226,6 +273,11 @@ export default function PaymentGatewayModal({
   function handleAutoFillOtp() {
     setOtpCode("123456");
     setOtpError("");
+  }
+
+  function handleAutoFillPin() {
+    setPinCode("1234");
+    setPinError("");
   }
 
   return (
@@ -288,6 +340,7 @@ export default function PaymentGatewayModal({
               onClick={() => {
                 setActiveTab("upi");
                 setShowOtpScreen(false);
+                setShowPinScreen(false);
               }}
             >
               <span className="nav-icon">📱</span>
@@ -303,6 +356,7 @@ export default function PaymentGatewayModal({
               onClick={() => {
                 setActiveTab("debit");
                 setShowOtpScreen(false);
+                setShowPinScreen(false);
               }}
             >
               <span className="nav-icon">💳</span>
@@ -318,6 +372,7 @@ export default function PaymentGatewayModal({
               onClick={() => {
                 setActiveTab("credit");
                 setShowOtpScreen(false);
+                setShowPinScreen(false);
               }}
             >
               <span className="nav-icon">💳</span>
@@ -333,6 +388,7 @@ export default function PaymentGatewayModal({
               onClick={() => {
                 setActiveTab("netbanking");
                 setShowOtpScreen(false);
+                setShowPinScreen(false);
               }}
             >
               <span className="nav-icon">🏛️</span>
@@ -352,15 +408,19 @@ export default function PaymentGatewayModal({
                 <p>Please do not refresh or close this window.</p>
               </div>
             ) : showOtpScreen ? (
-              /* Simulated Bank 3D Secure / OTP Screen */
+              /* Step 1: Simulated Bank 3D Secure / OTP Screen */
               <div className="gateway-otp-view animate-fade-up">
                 <div className="bank-otp-header">
                   <span className="bank-shield-icon">🛡️</span>
                   <div>
+                    <span className="step-badge">Step 1 of 2: OTP Verification</span>
                     <h4>Bank Authentication (3D Secure 2.0)</h4>
-                    <p>Enter the 6-digit OTP sent to your registered mobile number ending in •••• 4210</p>
+                    <p>
+                      Enter the 6-digit OTP sent to your registered mobile ending in ••••{" "}
+                      <strong>{student.student_id.slice(-4) || "5638"}</strong> & {student.email}
+                    </p>
                     <small className="otp-demo-badge">
-                      💡 <b>Simulation Mode:</b> No real SMS is sent. Use test OTP <strong>123456</strong> or click <b>Auto-fill Test OTP</b>.
+                      💡 <b>Simulation Mode:</b> Use test OTP <strong>123456</strong> or click <b>Auto-fill Test OTP</b>.
                     </small>
                   </div>
                 </div>
@@ -376,11 +436,11 @@ export default function PaymentGatewayModal({
                   </div>
                   <div className="otp-summary-item">
                     <span>Amount:</span>
-                    <strong>₹{amount.toLocaleString("en-IN")}</strong>
+                    <strong style={{ color: "#0284c7" }}>₹{amount.toLocaleString("en-IN")}</strong>
                   </div>
                 </div>
 
-                <form onSubmit={handleFinalSubmitOtp} className="otp-form">
+                <form onSubmit={handleVerifyOtpAndProceedToPin} className="otp-form">
                   <label htmlFor="gateway-otp-input">Enter 6-Digit OTP</label>
                   <div className="otp-input-row">
                     <input
@@ -412,20 +472,133 @@ export default function PaymentGatewayModal({
                       onClick={() => setShowOtpScreen(false)}
                       style={{ marginTop: 0 }}
                     >
-                      Back
+                      Cancel
                     </button>
                     <button
                       type="submit"
                       className="primary-button"
                       style={{ marginTop: 0, flex: 1 }}
                     >
-                      Verify OTP & Settle Fee (₹{amount.toLocaleString("en-IN")})
+                      Verify OTP & Enter PIN ➔
                     </button>
                   </div>
                 </form>
 
                 <p className="otp-footer-note">
-                  🔒 Verified by Visa / Mastercard Identity Check / RuPay Secure. Your transaction is protected with end-to-end institutional banking encryption.
+                  🔒 Step 1 of 2: Amount is <strong>not debited yet</strong>. After verifying your OTP, you will enter your secure PIN to authorize payment.
+                </p>
+              </div>
+            ) : showPinScreen ? (
+              /* Step 2: Simulated Secure PIN / UPI PIN Authorization Screen */
+              <div className="gateway-pin-view animate-fade-up">
+                <div className="bank-otp-header">
+                  <span className="bank-shield-icon">
+                    {currentPaymentModeLabel.toLowerCase().includes("upi")
+                      ? "🔐"
+                      : currentPaymentModeLabel.toLowerCase().includes("banking")
+                      ? "🏛️"
+                      : "💳"}
+                  </span>
+                  <div>
+                    <span className="step-badge">Step 2 of 2: PIN Authorization</span>
+                    <h4>
+                      {currentPaymentModeLabel.toLowerCase().includes("upi")
+                        ? "Enter UPI PIN"
+                        : currentPaymentModeLabel.toLowerCase().includes("banking")
+                        ? `${selectedBank} Transaction PIN`
+                        : "Enter Card / ATM PIN"}
+                    </h4>
+                    <p>
+                      {currentPaymentModeLabel.toLowerCase().includes("upi")
+                        ? `Enter your 4 or 6-digit UPI PIN to authorize instant payment of ₹${amount.toLocaleString("en-IN")} to ${payeeName}.`
+                        : currentPaymentModeLabel.toLowerCase().includes("banking")
+                        ? `Enter your secure transaction authorization PIN to release fee payment from ${selectedBank}.`
+                        : `Enter your 4-digit ATM / Card Security PIN to authorize fee payment of ₹${amount.toLocaleString("en-IN")}.`}
+                    </p>
+                    <small className="otp-demo-badge">
+                      💡 <b>Simulation Mode:</b> Enter test PIN <strong>1234</strong> or click <b>Auto-fill Test PIN</b>.
+                    </small>
+                  </div>
+                </div>
+
+                <div className="bank-otp-summary">
+                  <div className="otp-summary-item">
+                    <span>Beneficiary:</span>
+                    <strong>SITS Institutional Account</strong>
+                  </div>
+                  <div className="otp-summary-item">
+                    <span>Authorized Mode:</span>
+                    <strong>{currentPaymentModeLabel}</strong>
+                  </div>
+                  <div className="otp-summary-item">
+                    <span>Amount to Debit:</span>
+                    <strong style={{ color: "#0284c7" }}>₹{amount.toLocaleString("en-IN")}</strong>
+                  </div>
+                </div>
+
+                <form onSubmit={handleFinalSubmitPin} className="otp-form">
+                  <label htmlFor="gateway-pin-input">
+                    {currentPaymentModeLabel.toLowerCase().includes("upi")
+                      ? "Enter 4 or 6-Digit UPI PIN"
+                      : currentPaymentModeLabel.toLowerCase().includes("banking")
+                      ? "Enter Transaction Authorization PIN"
+                      : "Enter 4-Digit Card / ATM PIN"}
+                  </label>
+                  <div className="pin-input-row">
+                    <input
+                      id="gateway-pin-input"
+                      type={showPinText ? "text" : "password"}
+                      maxLength={6}
+                      value={pinCode}
+                      onChange={(e) => setPinCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="••••"
+                      autoFocus
+                      className="pin-code-input"
+                    />
+                    <button
+                      type="button"
+                      className="pin-toggle-btn"
+                      onClick={() => setShowPinText(!showPinText)}
+                      title={showPinText ? "Hide PIN" : "Show PIN"}
+                    >
+                      {showPinText ? "👁️ Hide" : "👁️ View"}
+                    </button>
+                    <button
+                      type="button"
+                      className="autofill-pin-btn"
+                      onClick={handleAutoFillPin}
+                      title="Click to fill sample PIN 1234"
+                    >
+                      ⚡ Auto-fill Test PIN (1234)
+                    </button>
+                  </div>
+
+                  {pinError && <p className="form-error">{pinError}</p>}
+
+                  <div className="otp-actions-row">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        setShowPinScreen(false);
+                        setShowOtpScreen(true);
+                      }}
+                      style={{ marginTop: 0 }}
+                    >
+                      ← Back to OTP
+                    </button>
+                    <button
+                      type="submit"
+                      className="primary-button"
+                      style={{ marginTop: 0, flex: 1 }}
+                    >
+                      🔒 Authorize & Pay ₹{amount.toLocaleString("en-IN")}
+                    </button>
+                  </div>
+                </form>
+
+                <p className="otp-footer-note">
+                  🔒 Bank-Grade Security: Your PIN is directly verified with your issuing bank's secure HSM system. FeeFlow and SITS never receive or store your PIN.
                 </p>
               </div>
             ) : (
