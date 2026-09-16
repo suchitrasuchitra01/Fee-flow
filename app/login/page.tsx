@@ -43,16 +43,16 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <Brand />
-        <div className="intro-content">
+        <div className="animate-fade-in"><Brand /></div>
+        <div className="intro-content animate-fade-up stagger-1">
           <p className="eyebrow">STUDENT FINANCE, SIMPLIFIED</p>
           <h1>Fees, made<br />clear.</h1>
           <p>View fee details, track payments, and settle your balance in one secure place.</p>
         </div>
-        <p className="auth-footnote">A simple portal for students and administrators.</p>
+        <p className="auth-footnote animate-fade-in stagger-3">A simple portal for students and administrators.</p>
       </section>
       <section className="login-panel">
-        <form className="login-card" onSubmit={handleLogin}>
+        <form className="login-card animate-fade-up stagger-2" onSubmit={handleLogin}>
           <div className="mobile-brand"><Brand /></div>
           <p className="eyebrow">WELCOME BACK</p>
           <h2>Sign in to your account</h2>
@@ -60,7 +60,16 @@ export default function LoginPage() {
           <label>Email address<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label>
           <label>Password<input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" /></label>
           {error && <p className="form-error">{error}</p>}
-          <button className="primary-button" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
+          <button className="primary-button" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="btn-spinner" />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
+          </button>
           <p className="help-text">Need access? Contact your fee administration office.</p>
         </form>
       </section>

@@ -35,6 +35,7 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [form, setForm] = useState<StudentForm>(initialForm);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
@@ -48,7 +49,9 @@ export default function AdminDashboard() {
     if (profile?.role !== "admin") return router.replace("/student");
     const { data } = await supabase.from("students").select("*").order("created_at", { ascending: false });
     setStudents(data || []);
+    setLoading(false);
   }
+
   useEffect(() => { load(); }, []);
 
   const update = (key: keyof StudentForm, value: string) => {
@@ -149,15 +152,176 @@ export default function AdminDashboard() {
   async function logout() { await createClient().auth.signOut(); router.replace("/login"); }
   const due = Math.max(0, form.total_fee - form.paid_fee);
 
-  return <main className="dashboard-shell admin-shell">
-    <header className="topbar"><Brand admin /><div className="account-chip"><div className="avatar admin-avatar">A</div><div><strong>Administration</strong><small>Fee manager</small></div><button onClick={logout}>Sign out</button></div></header>
-    <div className="dashboard-content">
-      <p className="eyebrow">ADMIN CONSOLE</p><h1>Fee collection, at a glance.</h1><p className="muted">Create student logins, import fee records, and keep every account accurate.</p>
-      <section className="admin-metrics"><Metric label="Students" value={String(students.length)} /><Metric label="Total fees" value={currency(totals.total)} /><Metric label="Collected" value={currency(totals.paid)} success/><Metric label="Outstanding" value={currency(totals.due)} warning/></section>
-      <section className="admin-layout"><form className="student-form" onSubmit={save}><div className="section-heading"><div><p className="eyebrow">{editingId ? "UPDATE STUDENT" : "ADD STUDENT"}</p><h2>{editingId ? "Update fee record" : "Student fee record"}</h2></div></div><p className="form-note">New students receive a login using their email and the default password <b>SITS@2024</b>. Select a record below to update its fees.</p><div className="form-grid"><label>H.T.No<input required readOnly={Boolean(editingId)} value={form.student_id} onChange={e => update("student_id", e.target.value)} placeholder="21A91A0501" /></label><label>Student name<input required value={form.name} onChange={e => update("name", e.target.value)} placeholder="Student name" /></label><label>Email ID<input required readOnly={Boolean(editingId)} type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="student@example.com" /></label><label>Total fee<input required min="0" type="number" value={form.total_fee} onChange={e => update("total_fee", e.target.value)} /></label><label>Paid fee<input required min="0" type="number" value={form.paid_fee} onChange={e => update("paid_fee", e.target.value)} /></label><label>Fine fee<input required min="0" type="number" value={form.fine_fee} onChange={e => update("fine_fee", e.target.value)} /></label><div className="calculated-field"><span>Due fee (automatic)</span><strong>{currency(due)}</strong></div></div>{message && <p className="form-message">{message}</p>}<div className="form-actions"><button className="primary-button" disabled={saving}>{saving ? "Saving..." : editingId ? "Update fee record" : "Create student account"}</button>{editingId && <button type="button" className="secondary-button" onClick={() => { setEditingId(null); setForm(initialForm); }}>Cancel</button>}</div><div className="import-box"><strong>Bulk import</strong><span>Accepted headers: H.T.No / student_id, Name, Email ID / email, Total Fee, Paid Fee, Fine Fee. Rupee-formatted amounts are supported.</span><label className="file-button">{importing ? "Importing..." : "Choose Excel / CSV"}<input disabled={importing} type="file" accept=".xlsx,.xls,.csv" onChange={importFile} /></label></div></form>
-      <section className="records-card"><div className="section-heading"><div><p className="eyebrow">ALL RECORDS</p><h2>Student accounts</h2></div><span className="record-count">{students.length} records</span></div><div className="table-wrap"><table><thead><tr><th>Student</th><th>H.T.No</th><th>Total</th><th>Paid</th><th>Due + fine</th><th></th></tr></thead><tbody>{students.map(s => <tr key={s.id}><td><strong>{s.name}</strong><small>{s.email}</small></td><td>{s.student_id}</td><td>{currency(s.total_fee)}</td><td className="success-text">{currency(s.paid_fee)}</td><td className={s.due_fee + s.fine_fee > 0 ? "warning-text" : "success-text"}>{currency(s.due_fee + s.fine_fee)}</td><td><button className="table-button" onClick={() => edit(s)}>Edit</button></td></tr>)}{students.length === 0 && <tr><td colSpan={6} className="empty-state">No student records yet.</td></tr>}</tbody></table></div></section></section>
-    </div>
-  </main>;
+  if (loading) {
+    return (
+      <div className="loading-screen animate-fade-in">
+        <div className="loading-spinner" />
+        <p>Loading administration portal...</p>
+      </div>
+    );
+  }
+
+  return (
+    <main className="dashboard-shell admin-shell">
+      <header className="topbar animate-fade-in">
+        <Brand admin />
+        <div className="account-chip">
+          <div className="avatar admin-avatar">A</div>
+          <div>
+            <strong>Administration</strong>
+            <small>Fee manager</small>
+          </div>
+          <button onClick={logout}>Sign out</button>
+        </div>
+      </header>
+      <div className="dashboard-content">
+        <div className="animate-fade-up">
+          <p className="eyebrow">ADMIN CONSOLE</p>
+          <h1>Fee collection, at a glance.</h1>
+          <p className="muted">Create student logins, import fee records, and keep every account accurate.</p>
+        </div>
+
+        <section className="admin-metrics animate-fade-up stagger-1">
+          <Metric label="Students" value={String(students.length)} />
+          <Metric label="Total fees" value={currency(totals.total)} />
+          <Metric label="Collected" value={currency(totals.paid)} success />
+          <Metric label="Outstanding" value={currency(totals.due)} warning />
+        </section>
+
+        <section className="admin-layout">
+          <form className={`student-form animate-fade-up stagger-2 ${editingId ? "is-editing" : ""}`} onSubmit={save}>
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">{editingId ? "UPDATE STUDENT" : "ADD STUDENT"}</p>
+                <h2>{editingId ? "Update fee record" : "Student fee record"}</h2>
+              </div>
+            </div>
+            <p className="form-note">New students receive a login using their email and the default password <b>SITS@2024</b>. Select a record below to update its fees.</p>
+            <div className="form-grid">
+              <label>
+                H.T.No
+                <input required readOnly={Boolean(editingId)} value={form.student_id} onChange={e => update("student_id", e.target.value)} placeholder="21A91A0501" />
+              </label>
+              <label>
+                Student name
+                <input required value={form.name} onChange={e => update("name", e.target.value)} placeholder="Student name" />
+              </label>
+              <label>
+                Email ID
+                <input required readOnly={Boolean(editingId)} type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="student@example.com" />
+              </label>
+              <label>
+                Total fee
+                <input required min="0" type="number" value={form.total_fee} onChange={e => update("total_fee", e.target.value)} />
+              </label>
+              <label>
+                Paid fee
+                <input required min="0" type="number" value={form.paid_fee} onChange={e => update("paid_fee", e.target.value)} />
+              </label>
+              <label>
+                Fine fee
+                <input required min="0" type="number" value={form.fine_fee} onChange={e => update("fine_fee", e.target.value)} />
+              </label>
+              <div className="calculated-field">
+                <span>Due fee (automatic)</span>
+                <strong>{currency(due)}</strong>
+              </div>
+            </div>
+            {message && <p className="form-message">{message}</p>}
+            <div className="form-actions">
+              <button className="primary-button" disabled={saving}>
+                {saving ? (
+                  <>
+                    <span className="btn-spinner" />
+                    Saving...
+                  </>
+                ) : editingId ? (
+                  "Update fee record"
+                ) : (
+                  "Create student account"
+                )}
+              </button>
+              {editingId && (
+                <button type="button" className="secondary-button" onClick={() => { setEditingId(null); setForm(initialForm); }}>
+                  Cancel
+                </button>
+              )}
+            </div>
+            <div className="import-box">
+              <strong>Bulk import</strong>
+              <span>Accepted headers: H.T.No / student_id, Name, Email ID / email, Total Fee, Paid Fee, Fine Fee. Rupee-formatted amounts are supported.</span>
+              <label className="file-button">
+                {importing ? (
+                  <>
+                    <span className="btn-spinner btn-spinner-green" />
+                    Importing...
+                  </>
+                ) : (
+                  "Choose Excel / CSV"
+                )}
+                <input disabled={importing} type="file" accept=".xlsx,.xls,.csv" onChange={importFile} />
+              </label>
+            </div>
+          </form>
+
+          <section className="records-card animate-fade-up stagger-3">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">ALL RECORDS</p>
+                <h2>Student accounts</h2>
+              </div>
+              <span className="record-count">{students.length} records</span>
+            </div>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>H.T.No</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Due + fine</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map(s => (
+                    <tr key={s.id}>
+                      <td>
+                        <strong>{s.name}</strong>
+                        <small>{s.email}</small>
+                      </td>
+                      <td>{s.student_id}</td>
+                      <td>{currency(s.total_fee)}</td>
+                      <td className="success-text">{currency(s.paid_fee)}</td>
+                      <td className={s.due_fee + s.fine_fee > 0 ? "warning-text" : "success-text"}>
+                        {currency(s.due_fee + s.fine_fee)}
+                      </td>
+                      <td>
+                        <button className="table-button" onClick={() => edit(s)}>Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {students.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="empty-state">No student records yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  );
 }
 
-function Metric({ label, value, success, warning }: { label: string; value: string; success?: boolean; warning?: boolean }) { return <div className={`metric ${success ? "metric-success" : ""} ${warning ? "metric-warning" : ""}`}><span>{label}</span><strong>{value}</strong></div>; }
+function Metric({ label, value, success, warning }: { label: string; value: string; success?: boolean; warning?: boolean }) {
+  return (
+    <div className={`metric ${success ? "metric-success" : ""} ${warning ? "metric-warning" : ""}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
