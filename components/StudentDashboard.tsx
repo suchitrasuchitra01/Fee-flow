@@ -752,7 +752,7 @@ export default function StudentDashboard() {
                     </div>
                     <div className="p-detail-row">
                       <span className="p-detail-label">Year</span>
-                      <strong className="p-detail-val">2nd Year</strong>
+                      <strong className="p-detail-val">3rd Year</strong>
                     </div>
 
                     {/* Fee Category Selector */}
