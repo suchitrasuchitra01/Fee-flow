@@ -87,6 +87,43 @@ button { cursor: pointer; }
   100% { background-position: 200% 0; }
 }
 
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(25px, -30px) scale(1.08); }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 25px) scale(1.06); }
+}
+
+@keyframes panelBlobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -20px) scale(1.12); }
+}
+
+@keyframes emeraldGradientWave {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes badgeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+@keyframes btnShine {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
 /* Utility Animation Classes */
 .animate-fade-up {
   animation: slideUpFade 0.55s var(--ease-out) both;
@@ -150,18 +187,50 @@ button { cursor: pointer; }
   grid-template-columns: minmax(400px, 46%) 1fr;
 }
 .auth-intro {
-  background: #164c3b;
+  background: linear-gradient(145deg, #0e372a 0%, #164c3b 50%, #1a5743 100%);
+  background-size: 200% 200%;
+  animation: emeraldGradientWave 16s ease infinite;
   color: white;
   padding: 48px clamp(35px, 6vw, 90px);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+.auth-intro::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: -80px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(199, 237, 119, 0.14) 0%, transparent 70%);
+  filter: blur(45px);
+  pointer-events: none;
+  animation: orbFloat1 12s ease-in-out infinite;
+}
+.auth-intro::after {
+  content: '';
+  position: absolute;
+  bottom: -90px;
+  right: -70px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.16) 0%, transparent 70%);
+  filter: blur(50px);
+  pointer-events: none;
+  animation: orbFloat2 14s ease-in-out infinite;
 }
 .auth-intro .portal-name { border-color: #7e9e90; }
 
 /* Login Page Brand Enlargement & Alignment */
 .auth-brand-wrap {
   margin-bottom: 26px;
+  position: relative;
+  z-index: 2;
 }
 .auth-intro .brand.login-brand {
   display: inline-flex;
@@ -169,6 +238,10 @@ button { cursor: pointer; }
   gap: 20px;
   padding: 8px 0;
   white-space: nowrap;
+  transition: transform 0.3s var(--ease-spring);
+}
+.auth-intro .brand.login-brand:hover {
+  transform: translateY(-2px);
 }
 .auth-intro .brand.login-brand .sits-logo {
   width: clamp(240px, 22vw, 310px);
@@ -216,6 +289,8 @@ button { cursor: pointer; }
 .intro-content {
   margin: auto 0;
   max-width: 480px;
+  position: relative;
+  z-index: 2;
 }
 .eyebrow {
   margin: 0 0 11px;
@@ -235,9 +310,43 @@ button { cursor: pointer; }
   line-height: 1.7;
   max-width: 390px;
 }
+
+/* Feature Trust Chips */
+.auth-feature-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 26px;
+}
+.auth-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d1fae5;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s var(--ease-spring);
+  animation: badgeFloat 4s ease-in-out infinite alternate;
+}
+.auth-chip:nth-child(2) { animation-delay: 1.2s; }
+.auth-chip:nth-child(3) { animation-delay: 2.4s; }
+.auth-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(199, 237, 119, 0.5);
+  color: #ffffff;
+  transform: translateY(-3px) scale(1.04);
+}
+
 .auth-footnote {
   color: #a5beb0;
   font-size: 12px;
+  position: relative;
+  z-index: 2;
 }
 .login-panel {
   display: grid;
@@ -245,20 +354,41 @@ button { cursor: pointer; }
   padding: 32px;
   background-color: #f8fafc;
   background-image:
-    radial-gradient(at 80% 20%, rgba(236, 253, 245, 0.7) 0px, transparent 50%),
-    radial-gradient(at 20% 80%, rgba(239, 246, 255, 0.7) 0px, transparent 50%);
+    radial-gradient(at 85% 15%, rgba(209, 250, 229, 0.65) 0px, transparent 50%),
+    radial-gradient(at 15% 85%, rgba(224, 231, 255, 0.65) 0px, transparent 50%);
+  position: relative;
+  overflow: hidden;
 }
+.login-panel::before {
+  content: '';
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  top: -160px;
+  right: -160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 253, 245, 0.9) 0%, rgba(209, 250, 229, 0.35) 50%, transparent 70%);
+  filter: blur(55px);
+  pointer-events: none;
+  animation: panelBlobFloat 14s ease-in-out infinite;
+}
+
 .login-card {
-  width: min(100%, 420px);
-  padding: 36px 32px;
-  background: white;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  transition: box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  width: min(100%, 425px);
+  padding: 38px 34px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 20px 45px -10px rgba(22, 76, 59, 0.08);
+  position: relative;
+  z-index: 2;
+  transition: box-shadow 0.35s ease, transform 0.35s var(--ease-spring), border-color 0.3s ease;
 }
 .login-card:hover {
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 16px 42px -6px rgba(15, 23, 42, 0.08), 0 28px 55px -10px rgba(22, 76, 59, 0.13);
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
 }
 .login-card h2 {
   margin: 0 0 9px;
@@ -278,6 +408,10 @@ button { cursor: pointer; }
   font-size: 12px;
   font-weight: 700;
   margin-top: 22px;
+  transition: color 0.2s ease;
+}
+.login-card label:focus-within {
+  color: var(--green);
 }
 .login-card input, .form-grid input {
   outline: none;
@@ -287,12 +421,24 @@ button { cursor: pointer; }
   padding: 13px 14px;
   color: var(--ink);
   font-size: 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: all 0.25s var(--ease-spring);
 }
 .login-card input:focus, .form-grid input:focus {
   border-color: #2e8563;
-  box-shadow: 0 0 0 3px #dff1e7;
+  box-shadow: 0 0 0 4px rgba(21, 101, 75, 0.14);
+  transform: translateY(-1px);
   background: #fff;
+}
+.btn-arrow {
+  display: inline-block;
+  transition: transform 0.22s var(--ease-spring);
+  margin-left: 2px;
+}
+.login-card .primary-button:hover .btn-arrow {
+  transform: translateX(5px);
+}
+.form-error {
+  animation: shakeError 0.4s ease-in-out;
 }
 .primary-button {
   display: inline-flex;

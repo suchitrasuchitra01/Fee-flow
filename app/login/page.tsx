@@ -50,6 +50,12 @@ export default function LoginPage() {
           <p className="eyebrow">STUDENT FINANCE, SIMPLIFIED</p>
           <h1>Fees, made<br />clear.</h1>
           <p>View fee details, track payments, and settle your balance in one secure place.</p>
+          
+          <div className="auth-feature-chips animate-fade-up stagger-2">
+            <span className="auth-chip">⚡ Instant UPI Verification</span>
+            <span className="auth-chip">🔒 Safe & Secure Portal</span>
+            <span className="auth-chip">🧾 Official E-Receipts</span>
+          </div>
         </div>
         <p className="auth-footnote animate-fade-in stagger-3">A simple portal for students and administrators.</p>
       </section>
@@ -69,7 +75,10 @@ export default function LoginPage() {
                 Signing in...
               </>
             ) : (
-              "Sign in"
+              <>
+                <span>Sign in</span>
+                <span className="btn-arrow" aria-hidden="true">→</span>
+              </>
             )}
           </button>
           <p className="help-text">Need access? Contact your fee administration office.</p>
