@@ -37,9 +37,7 @@ export default function StudentDashboard() {
 
   // Payment Amount custom edit state
   const [customAmount, setCustomAmount] = useState<number | null>(null);
-  const [isEditingAmount, setIsEditingAmount] = useState(false);
-  const [inputAmount, setInputAmount] = useState("");
-  const [amountError, setAmountError] = useState("");
+  const [allowCustomInApp, setAllowCustomInApp] = useState(false);
 
   useEffect(() => {
     // Read local cache immediately
@@ -178,37 +176,20 @@ export default function StudentDashboard() {
   const activeAmount = (customAmount !== null && customAmount > 0) ? customAmount : totalPayable;
   const note = `Fee payment ${student.student_id}`;
 
-  function handleOpenAmountEdit() {
-    setInputAmount(String(activeAmount));
-    setAmountError("");
-    setIsEditingAmount(true);
+  function getUpiUri(appId: string = "generic", targetAmount: number = activeAmount, unlocked: boolean = allowCustomInApp) {
+    const amParam = !unlocked && targetAmount > 0 ? `&am=${targetAmount}` : "";
+    const base = `pa=${vpa}&pn=${encodeURIComponent(payee)}${amParam}&cu=INR&tn=${encodeURIComponent(note)}`;
+    if (appId === "gpay") return `tez://upi/pay?${base}`;
+    if (appId === "phonepe") return `phonepe://pay?${base}`;
+    if (appId === "paytm") return `paytmmp://pay?${base}`;
+    return `upi://pay?${base}`;
   }
 
-  function handleSaveAmount(e: React.FormEvent) {
-    e.preventDefault();
-    setAmountError("");
-    const parsed = parseFloat(inputAmount);
-    if (isNaN(parsed) || parsed <= 0) {
-      setAmountError("Please enter a valid amount greater than ₹0.");
-      return;
-    }
-    setCustomAmount(parsed);
-    setIsEditingAmount(false);
-  }
-
-  function handleResetAmount() {
-    setCustomAmount(null);
-    setInputAmount("");
-    setAmountError("");
-    setIsEditingAmount(false);
-  }
-
-  const baseUpiParams = `pa=${vpa}&pn=${encodeURIComponent(payee)}&am=${activeAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
-  const genericUpiUri = `upi://pay?${baseUpiParams}`;
-  const gpayUri = `tez://upi/pay?${baseUpiParams}`;
-  const phonePeUri = `phonepe://pay?${baseUpiParams}`;
-  const paytmUri = `paytmmp://pay?${baseUpiParams}`;
-  const bhimUri = `upi://pay?${baseUpiParams}`;
+  const genericUpiUri = getUpiUri("generic");
+  const gpayUri = getUpiUri("gpay");
+  const phonePeUri = getUpiUri("phonepe");
+  const paytmUri = getUpiUri("paytm");
+  const bhimUri = getUpiUri("bhim");
 
   const apps: AppInfo[] = [
     {
@@ -246,13 +227,7 @@ export default function StudentDashboard() {
   ];
 
   function handleAppSelect(app: AppInfo) {
-    const currentBaseUpi = `pa=${vpa}&pn=${encodeURIComponent(payee)}&am=${activeAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
-    let currentUri = `upi://pay?${currentBaseUpi}`;
-    if (app.id === "gpay") currentUri = `tez://upi/pay?${currentBaseUpi}`;
-    else if (app.id === "phonepe") currentUri = `phonepe://pay?${currentBaseUpi}`;
-    else if (app.id === "paytm") currentUri = `paytmmp://pay?${currentBaseUpi}`;
-    else if (app.id === "bhim") currentUri = `upi://pay?${currentBaseUpi}`;
-
+    const currentUri = getUpiUri(app.id);
     const updatedApp = { ...app, uri: currentUri };
     setActiveApp(updatedApp);
     if (typeof window !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -336,137 +311,119 @@ export default function StudentDashboard() {
 
               {totalPayable > 0 ? (
                 <div className="upi-apps-section">
-                  {/* Payment Amount Display & Edit */}
+                  {/* Direct Always-Editable Payment Amount */}
                   <div className="payment-amount-box">
                     <div className="payment-amount-header">
                       <div className="payment-amount-meta">
-                        <span className="payment-amount-label">AMOUNT TO PAY</span>
-                        {customAmount !== null && customAmount !== totalPayable && (
-                          <span className="payment-amount-badge">Customized</span>
+                        <span className="payment-amount-label">AMOUNT TO PAY (₹)</span>
+                        {customAmount !== null && customAmount !== totalPayable && !allowCustomInApp && (
+                          <span className="payment-amount-badge">Custom Amount</span>
+                        )}
+                        {allowCustomInApp && (
+                          <span className="payment-amount-badge app-unlocked-badge">Open in UPI App</span>
                         )}
                       </div>
-                      {!isEditingAmount && (
+                      {(customAmount !== null || allowCustomInApp) && (
                         <button
                           type="button"
-                          className="edit-btn"
-                          onClick={handleOpenAmountEdit}
-                          title="Edit payment amount"
+                          className="reset-amount-link"
+                          onClick={() => {
+                            setCustomAmount(null);
+                            setAllowCustomInApp(false);
+                          }}
+                          title="Reset to full balance due"
                         >
-                          ✏️ Edit Amount
+                          ↩ Reset to Full Due ({currency(totalPayable)})
                         </button>
                       )}
                     </div>
 
-                    {isEditingAmount ? (
-                      <form className="payment-amount-form animate-fade-in" onSubmit={handleSaveAmount}>
-                        <div className="payment-amount-input-group">
-                          <span className="currency-prefix">₹</span>
-                          <input
-                            type="number"
-                            min="1"
-                            step="any"
-                            value={inputAmount}
-                            onChange={(e) => setInputAmount(e.target.value)}
-                            placeholder="Enter amount to pay"
-                            autoFocus
-                            className="payment-amount-input"
-                          />
-                        </div>
+                    <div className="direct-amount-input-wrap">
+                      <span className="currency-prefix">₹</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={allowCustomInApp ? "" : (customAmount !== null ? customAmount : totalPayable)}
+                        disabled={allowCustomInApp}
+                        onChange={(e) => {
+                          setAllowCustomInApp(false);
+                          const val = e.target.value;
+                          if (val === "") {
+                            setCustomAmount(0);
+                          } else {
+                            const num = parseFloat(val);
+                            if (!isNaN(num)) setCustomAmount(num);
+                          }
+                        }}
+                        className="direct-amount-input"
+                        placeholder={allowCustomInApp ? "Enter amount directly inside UPI app" : "Enter amount to pay"}
+                      />
+                    </div>
 
-                        <div className="payment-amount-presets">
-                          <button
-                            type="button"
-                            className={`preset-chip ${Number(inputAmount) === totalPayable ? "active" : ""}`}
-                            onClick={() => setInputAmount(String(totalPayable))}
-                          >
-                            Full Due ({currency(totalPayable)})
-                          </button>
-                          {totalPayable > 10000 && (
-                            <button
-                              type="button"
-                              className={`preset-chip ${Number(inputAmount) === 10000 ? "active" : ""}`}
-                              onClick={() => setInputAmount("10000")}
-                            >
-                              ₹10,000
-                            </button>
-                          )}
-                          {totalPayable > 5000 && (
-                            <button
-                              type="button"
-                              className={`preset-chip ${Number(inputAmount) === 5000 ? "active" : ""}`}
-                              onClick={() => setInputAmount("5000")}
-                            >
-                              ₹5,000
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className={`preset-chip ${Number(inputAmount) === 1 ? "active" : ""}`}
-                            onClick={() => setInputAmount("1")}
-                          >
-                            ₹1 (Test Pay)
-                          </button>
-                        </div>
+                    <div className="payment-amount-presets">
+                      <button
+                        type="button"
+                        className={`preset-chip ${!allowCustomInApp && (customAmount === null || customAmount === totalPayable) ? "active" : ""}`}
+                        onClick={() => {
+                          setCustomAmount(totalPayable);
+                          setAllowCustomInApp(false);
+                        }}
+                      >
+                        Full Due ({currency(totalPayable)})
+                      </button>
+                      {totalPayable > 10000 && (
+                        <button
+                          type="button"
+                          className={`preset-chip ${!allowCustomInApp && customAmount === 10000 ? "active" : ""}`}
+                          onClick={() => {
+                            setCustomAmount(10000);
+                            setAllowCustomInApp(false);
+                          }}
+                        >
+                          ₹10,000
+                        </button>
+                      )}
+                      {totalPayable > 5000 && (
+                        <button
+                          type="button"
+                          className={`preset-chip ${!allowCustomInApp && customAmount === 5000 ? "active" : ""}`}
+                          onClick={() => {
+                            setCustomAmount(5000);
+                            setAllowCustomInApp(false);
+                          }}
+                        >
+                          ₹5,000
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={`preset-chip ${!allowCustomInApp && customAmount === 1 ? "active" : ""}`}
+                        onClick={() => {
+                          setCustomAmount(1);
+                          setAllowCustomInApp(false);
+                        }}
+                      >
+                        ₹1 (Test Pay)
+                      </button>
+                      <button
+                        type="button"
+                        className={`preset-chip unlock-chip ${allowCustomInApp ? "active" : ""}`}
+                        onClick={() => setAllowCustomInApp(!allowCustomInApp)}
+                        title="Unlock amount to enter directly in PhonePe, GPay, or Paytm"
+                      >
+                        🔓 {allowCustomInApp ? "✓ Entering inside app" : "Enter amount in UPI app"}
+                      </button>
+                    </div>
 
-                        {amountError && (
-                          <p className="form-error" style={{ margin: "4px 0", fontSize: 12 }}>
-                            {amountError}
-                          </p>
-                        )}
-                        {Number(inputAmount) > totalPayable && (
-                          <p style={{ margin: "4px 0", fontSize: 11, color: "#d97706", fontWeight: 600 }}>
-                            ℹ️ Amount exceeds balance due ({currency(totalPayable)}).
-                          </p>
-                        )}
-
-                        <div className="payment-amount-actions">
-                          <button
-                            type="button"
-                            className="secondary-button"
-                            onClick={() => {
-                              setIsEditingAmount(false);
-                              setAmountError("");
-                            }}
-                            style={{ padding: "6px 14px", fontSize: 12, margin: 0 }}
-                          >
-                            Cancel
-                          </button>
-                          {customAmount !== null && (
-                            <button
-                              type="button"
-                              className="secondary-button"
-                              onClick={handleResetAmount}
-                              style={{ padding: "6px 14px", fontSize: 12, margin: 0 }}
-                            >
-                              Reset to Full
-                            </button>
-                          )}
-                          <button
-                            type="submit"
-                            className="primary-button"
-                            style={{ padding: "6px 18px", fontSize: 12, margin: 0 }}
-                          >
-                            Apply Amount
-                          </button>
-                        </div>
-                      </form>
+                    {allowCustomInApp ? (
+                      <p className="payment-mode-hint success-hint">
+                        ✓ <b>Amount Unlocked:</b> When you open PhonePe or GPay, the amount field will be open so you can enter any amount directly inside the app.
+                      </p>
                     ) : (
-                      <div className="payment-amount-display">
-                        <div className="payment-amount-val">
-                          <span className="currency-symbol">₹</span>
-                          <span className="val-number">{activeAmount.toLocaleString("en-IN")}</span>
-                        </div>
-                        {customAmount !== null && customAmount !== totalPayable && (
-                          <button
-                            type="button"
-                            className="reset-amount-link"
-                            onClick={handleResetAmount}
-                            title={`Reset to total due ${currency(totalPayable)}`}
-                          >
-                            ↩ Reset to full due ({currency(totalPayable)})
-                          </button>
-                        )}
-                      </div>
+                      <p className="payment-mode-hint">
+                        💡 Tap the amount above to edit it, choose a preset, or click <b>"Enter amount in UPI app"</b> to type it directly inside PhonePe.
+                      </p>
                     )}
                   </div>
 
@@ -626,7 +583,9 @@ export default function StudentDashboard() {
 
             <div className="qr-wrap">
               <QRCodeSVG value={genericUpiUri} size={132} includeMargin />
-              <small>Scan to pay {currency(activeAmount)}</small>
+              <small>
+                {allowCustomInApp ? "Scan to enter amount & pay" : `Scan to pay ${currency(activeAmount)}`}
+              </small>
             </div>
           </article>
         </section>
@@ -650,32 +609,92 @@ export default function StudentDashboard() {
               <h3>Pay with {activeApp.name}</h3>
             </div>
 
-            <div className="modal-amount-tag">
-              <div>
-                Payable: <strong>{currency(activeAmount)}</strong>
-                {customAmount !== null && customAmount !== totalPayable && (
-                  <span style={{ fontSize: 11, color: "#2563eb", fontWeight: 700, marginLeft: 4 }}>(Customized)</span>
+            <div className="modal-amount-control">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span className="modal-amount-label" style={{ margin: 0 }}>AMOUNT TO PAY</span>
+                {allowCustomInApp ? (
+                  <span className="payment-amount-badge app-unlocked-badge">Open in {activeApp.name}</span>
+                ) : (
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)" }}>{currency(activeAmount)}</span>
                 )}
-                {" "}• Payee: <strong>{payee}</strong>
               </div>
-              <button
-                type="button"
-                className="edit-btn"
-                onClick={() => {
-                  setActiveApp(null);
-                  handleOpenAmountEdit();
-                }}
-                title="Change payment amount"
-              >
-                ✏️ Edit Amount
-              </button>
+
+              <div className="direct-amount-input-wrap" style={{ padding: "0 10px" }}>
+                <span className="currency-prefix" style={{ fontSize: 18 }}>₹</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="any"
+                  value={allowCustomInApp ? "" : (customAmount !== null ? customAmount : totalPayable)}
+                  disabled={allowCustomInApp}
+                  onChange={(e) => {
+                    setAllowCustomInApp(false);
+                    const val = e.target.value;
+                    if (val === "") {
+                      setCustomAmount(0);
+                    } else {
+                      const num = parseFloat(val);
+                      if (!isNaN(num)) setCustomAmount(num);
+                    }
+                  }}
+                  className="direct-amount-input"
+                  style={{ fontSize: 16, padding: "6px 0" }}
+                  placeholder={allowCustomInApp ? `Enter amount inside ${activeApp.name}` : "Enter custom amount"}
+                />
+              </div>
+
+              <div className="payment-amount-presets" style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className={`preset-chip ${!allowCustomInApp && (customAmount === null || customAmount === totalPayable) ? "active" : ""}`}
+                  onClick={() => {
+                    setCustomAmount(totalPayable);
+                    setAllowCustomInApp(false);
+                  }}
+                >
+                  Full Due ({currency(totalPayable)})
+                </button>
+                {totalPayable > 10000 && (
+                  <button
+                    type="button"
+                    className={`preset-chip ${!allowCustomInApp && customAmount === 10000 ? "active" : ""}`}
+                    onClick={() => {
+                      setCustomAmount(10000);
+                      setAllowCustomInApp(false);
+                    }}
+                  >
+                    ₹10,000
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={`preset-chip ${!allowCustomInApp && customAmount === 1 ? "active" : ""}`}
+                  onClick={() => {
+                    setCustomAmount(1);
+                    setAllowCustomInApp(false);
+                  }}
+                >
+                  ₹1 (Test)
+                </button>
+                <button
+                  type="button"
+                  className={`preset-chip unlock-chip ${allowCustomInApp ? "active" : ""}`}
+                  onClick={() => setAllowCustomInApp(!allowCustomInApp)}
+                >
+                  🔓 {allowCustomInApp ? `✓ Open in ${activeApp.name}` : `Enter inside ${activeApp.name}`}
+                </button>
+              </div>
             </div>
 
             <p className="modal-instructions">{activeApp.instructions}</p>
 
             <div className="modal-qr-box">
               <QRCodeSVG value={genericUpiUri} size={160} includeMargin />
-              <small>Scan with {activeApp.name} to pay {currency(activeAmount)}</small>
+              <small>
+                {allowCustomInApp
+                  ? `Scan with ${activeApp.name} to enter custom amount & pay`
+                  : `Scan with ${activeApp.name} to pay ${currency(activeAmount)}`}
+              </small>
             </div>
 
             <div className="upi-vpa-box">
@@ -719,7 +738,7 @@ export default function StudentDashboard() {
               </a>
 
               <a
-                href={activeApp.uri}
+                href={getUpiUri(activeApp.id)}
                 className="primary-button"
                 style={{ marginTop: 0 }}
               >
