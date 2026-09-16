@@ -35,6 +35,12 @@ export default function StudentDashboard() {
   const [upiSaveError, setUpiSaveError] = useState("");
   const [upiSaveSuccess, setUpiSaveSuccess] = useState("");
 
+  // Payment Amount custom edit state
+  const [customAmount, setCustomAmount] = useState<number | null>(null);
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
+  const [inputAmount, setInputAmount] = useState("");
+  const [amountError, setAmountError] = useState("");
+
   useEffect(() => {
     // Read local cache immediately
     try {
@@ -169,9 +175,35 @@ export default function StudentDashboard() {
   }
 
   const totalPayable = student.due_fee + student.fine_fee;
+  const activeAmount = (customAmount !== null && customAmount > 0) ? customAmount : totalPayable;
   const note = `Fee payment ${student.student_id}`;
 
-  const baseUpiParams = `pa=${vpa}&pn=${encodeURIComponent(payee)}&am=${totalPayable}&cu=INR&tn=${encodeURIComponent(note)}`;
+  function handleOpenAmountEdit() {
+    setInputAmount(String(activeAmount));
+    setAmountError("");
+    setIsEditingAmount(true);
+  }
+
+  function handleSaveAmount(e: React.FormEvent) {
+    e.preventDefault();
+    setAmountError("");
+    const parsed = parseFloat(inputAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      setAmountError("Please enter a valid amount greater than ₹0.");
+      return;
+    }
+    setCustomAmount(parsed);
+    setIsEditingAmount(false);
+  }
+
+  function handleResetAmount() {
+    setCustomAmount(null);
+    setInputAmount("");
+    setAmountError("");
+    setIsEditingAmount(false);
+  }
+
+  const baseUpiParams = `pa=${vpa}&pn=${encodeURIComponent(payee)}&am=${activeAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
   const genericUpiUri = `upi://pay?${baseUpiParams}`;
   const gpayUri = `tez://upi/pay?${baseUpiParams}`;
   const phonePeUri = `phonepe://pay?${baseUpiParams}`;
@@ -214,9 +246,17 @@ export default function StudentDashboard() {
   ];
 
   function handleAppSelect(app: AppInfo) {
-    setActiveApp(app);
+    const currentBaseUpi = `pa=${vpa}&pn=${encodeURIComponent(payee)}&am=${activeAmount}&cu=INR&tn=${encodeURIComponent(note)}`;
+    let currentUri = `upi://pay?${currentBaseUpi}`;
+    if (app.id === "gpay") currentUri = `tez://upi/pay?${currentBaseUpi}`;
+    else if (app.id === "phonepe") currentUri = `phonepe://pay?${currentBaseUpi}`;
+    else if (app.id === "paytm") currentUri = `paytmmp://pay?${currentBaseUpi}`;
+    else if (app.id === "bhim") currentUri = `upi://pay?${currentBaseUpi}`;
+
+    const updatedApp = { ...app, uri: currentUri };
+    setActiveApp(updatedApp);
     if (typeof window !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      window.location.href = app.uri;
+      window.location.href = currentUri;
     }
   }
 
@@ -296,6 +336,140 @@ export default function StudentDashboard() {
 
               {totalPayable > 0 ? (
                 <div className="upi-apps-section">
+                  {/* Payment Amount Display & Edit */}
+                  <div className="payment-amount-box">
+                    <div className="payment-amount-header">
+                      <div className="payment-amount-meta">
+                        <span className="payment-amount-label">AMOUNT TO PAY</span>
+                        {customAmount !== null && customAmount !== totalPayable && (
+                          <span className="payment-amount-badge">Customized</span>
+                        )}
+                      </div>
+                      {!isEditingAmount && (
+                        <button
+                          type="button"
+                          className="edit-btn"
+                          onClick={handleOpenAmountEdit}
+                          title="Edit payment amount"
+                        >
+                          ✏️ Edit Amount
+                        </button>
+                      )}
+                    </div>
+
+                    {isEditingAmount ? (
+                      <form className="payment-amount-form animate-fade-in" onSubmit={handleSaveAmount}>
+                        <div className="payment-amount-input-group">
+                          <span className="currency-prefix">₹</span>
+                          <input
+                            type="number"
+                            min="1"
+                            step="any"
+                            value={inputAmount}
+                            onChange={(e) => setInputAmount(e.target.value)}
+                            placeholder="Enter amount to pay"
+                            autoFocus
+                            className="payment-amount-input"
+                          />
+                        </div>
+
+                        <div className="payment-amount-presets">
+                          <button
+                            type="button"
+                            className={`preset-chip ${Number(inputAmount) === totalPayable ? "active" : ""}`}
+                            onClick={() => setInputAmount(String(totalPayable))}
+                          >
+                            Full Due ({currency(totalPayable)})
+                          </button>
+                          {totalPayable > 10000 && (
+                            <button
+                              type="button"
+                              className={`preset-chip ${Number(inputAmount) === 10000 ? "active" : ""}`}
+                              onClick={() => setInputAmount("10000")}
+                            >
+                              ₹10,000
+                            </button>
+                          )}
+                          {totalPayable > 5000 && (
+                            <button
+                              type="button"
+                              className={`preset-chip ${Number(inputAmount) === 5000 ? "active" : ""}`}
+                              onClick={() => setInputAmount("5000")}
+                            >
+                              ₹5,000
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className={`preset-chip ${Number(inputAmount) === 1 ? "active" : ""}`}
+                            onClick={() => setInputAmount("1")}
+                          >
+                            ₹1 (Test Pay)
+                          </button>
+                        </div>
+
+                        {amountError && (
+                          <p className="form-error" style={{ margin: "4px 0", fontSize: 12 }}>
+                            {amountError}
+                          </p>
+                        )}
+                        {Number(inputAmount) > totalPayable && (
+                          <p style={{ margin: "4px 0", fontSize: 11, color: "#d97706", fontWeight: 600 }}>
+                            ℹ️ Amount exceeds balance due ({currency(totalPayable)}).
+                          </p>
+                        )}
+
+                        <div className="payment-amount-actions">
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => {
+                              setIsEditingAmount(false);
+                              setAmountError("");
+                            }}
+                            style={{ padding: "6px 14px", fontSize: 12, margin: 0 }}
+                          >
+                            Cancel
+                          </button>
+                          {customAmount !== null && (
+                            <button
+                              type="button"
+                              className="secondary-button"
+                              onClick={handleResetAmount}
+                              style={{ padding: "6px 14px", fontSize: 12, margin: 0 }}
+                            >
+                              Reset to Full
+                            </button>
+                          )}
+                          <button
+                            type="submit"
+                            className="primary-button"
+                            style={{ padding: "6px 18px", fontSize: 12, margin: 0 }}
+                          >
+                            Apply Amount
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="payment-amount-display">
+                        <div className="payment-amount-val">
+                          <span className="currency-symbol">₹</span>
+                          <span className="val-number">{activeAmount.toLocaleString("en-IN")}</span>
+                        </div>
+                        {customAmount !== null && customAmount !== totalPayable && (
+                          <button
+                            type="button"
+                            className="reset-amount-link"
+                            onClick={handleResetAmount}
+                            title={`Reset to total due ${currency(totalPayable)}`}
+                          >
+                            ↩ Reset to full due ({currency(totalPayable)})
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="upi-section-title">Choose Payment App</div>
                   <div className="upi-apps-grid">
                     {apps.map((app) => (
@@ -452,7 +626,7 @@ export default function StudentDashboard() {
 
             <div className="qr-wrap">
               <QRCodeSVG value={genericUpiUri} size={132} includeMargin />
-              <small>Scan to pay {currency(totalPayable)}</small>
+              <small>Scan to pay {currency(activeAmount)}</small>
             </div>
           </article>
         </section>
@@ -477,14 +651,31 @@ export default function StudentDashboard() {
             </div>
 
             <div className="modal-amount-tag">
-              Payable: {currency(totalPayable)} • Payee: {payee}
+              <div>
+                Payable: <strong>{currency(activeAmount)}</strong>
+                {customAmount !== null && customAmount !== totalPayable && (
+                  <span style={{ fontSize: 11, color: "#2563eb", fontWeight: 700, marginLeft: 4 }}>(Customized)</span>
+                )}
+                {" "}• Payee: <strong>{payee}</strong>
+              </div>
+              <button
+                type="button"
+                className="edit-btn"
+                onClick={() => {
+                  setActiveApp(null);
+                  handleOpenAmountEdit();
+                }}
+                title="Change payment amount"
+              >
+                ✏️ Edit Amount
+              </button>
             </div>
 
             <p className="modal-instructions">{activeApp.instructions}</p>
 
             <div className="modal-qr-box">
               <QRCodeSVG value={genericUpiUri} size={160} includeMargin />
-              <small>Scan with {activeApp.name} to pay {currency(totalPayable)}</small>
+              <small>Scan with {activeApp.name} to pay {currency(activeAmount)}</small>
             </div>
 
             <div className="upi-vpa-box">
@@ -510,6 +701,10 @@ export default function StudentDashboard() {
                   {copied ? "Copied! ✓" : "Copy"}
                 </button>
               </div>
+            </div>
+
+            <div className="modal-security-tip">
+              💡 <b>Tip:</b> If {activeApp.name} declines external web links for security, open the app directly and scan the QR code above or pay to UPI ID <code>{vpa}</code>.
             </div>
 
             <div className="modal-action-row">

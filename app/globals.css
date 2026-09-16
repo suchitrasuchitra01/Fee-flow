@@ -580,6 +580,159 @@ button { cursor: pointer; }
 .upi-apps-section {
   margin-top: 14px;
 }
+
+/* Payment Amount Box & Quick Presets */
+.payment-amount-box {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 15px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.payment-amount-box:hover {
+  border-color: #cbd5e1;
+}
+.payment-amount-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.payment-amount-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.payment-amount-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.payment-amount-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
+}
+.payment-amount-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.payment-amount-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  line-height: 1.1;
+}
+.payment-amount-val .currency-symbol {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.payment-amount-val .val-number {
+  letter-spacing: -0.5px;
+}
+.reset-amount-link {
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.18s ease;
+}
+.reset-amount-link:hover {
+  color: var(--green-dark);
+}
+.payment-amount-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.payment-amount-input-group {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  padding: 0 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.payment-amount-input-group:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(21, 101, 75, 0.12);
+}
+.payment-amount-input-group .currency-prefix {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+  padding-right: 6px;
+  user-select: none;
+}
+.payment-amount-input {
+  border: none;
+  outline: none;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  width: 100%;
+  padding: 8px 0;
+  background: transparent;
+  font-family: inherit;
+}
+.payment-amount-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.preset-chip {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s var(--ease-spring);
+}
+.preset-chip:hover {
+  border-color: var(--green);
+  background: #f0fdf4;
+  color: #0e4c38;
+  transform: translateY(-1px);
+}
+.preset-chip.active {
+  background: #e8f5ec;
+  border-color: var(--green);
+  color: var(--green);
+  font-weight: 700;
+}
+.payment-amount-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .upi-section-title {
   font-size: 11px;
   font-weight: 700;
@@ -943,15 +1096,37 @@ button { cursor: pointer; }
   color: var(--ink);
 }
 .modal-amount-tag {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   background: #ecfdf5;
   color: var(--green);
   font-weight: 700;
   font-size: 13px;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
   border: 1px solid #d1fae5;
   margin-bottom: 12px;
+}
+.modal-security-tip {
+  margin: 12px 0 6px;
+  padding: 9px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.45;
+}
+.modal-security-tip code {
+  font-family: 'DM Mono', monospace;
+  font-weight: 700;
+  color: var(--ink);
+  background: #edf2f7;
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 .modal-instructions {
   font-size: 13px;
