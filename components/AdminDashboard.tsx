@@ -59,7 +59,26 @@ export default function AdminDashboard() {
     setForm((old) => ({ ...old, [key]: numeric ? Number(value) : value }));
   };
 
-  async function submitStudents(records: StudentForm[]) {
+  async function submitStudents(records: StudentForm[]): Promise<{ created: number; updated: number; failed: { row: number; error: string }[] }> {
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        const response = await fetch("/api/students", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ students: records }),
+        });
+        if (response.ok) {
+          return (await response.json()) as { created: number; updated: number; failed: { row: number; error: string }[] };
+        }
+      }
+    } catch (err) {
+      console.warn("Server-side student provisioning unavailable, using browser fallback:", err);
+    }
     return saveFromBrowser(records);
   }
 
