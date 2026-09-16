@@ -190,12 +190,20 @@ button { cursor: pointer; }
 .auth-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(400px, 46%) 1fr;
+  grid-template-columns: minmax(420px, 46%) 1fr;
+  position: relative;
+  background-image: 
+    linear-gradient(135deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.22) 50%, rgba(15, 23, 42, 0.48) 100%),
+    url('/campus-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 .auth-intro {
-  background: linear-gradient(145deg, #f0f9ff 0%, #f8fafc 45%, #e0f2fe 100%);
-  background-size: 200% 200%;
-  animation: emeraldGradientWave 16s ease infinite;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   color: var(--ink);
   padding: 48px clamp(35px, 6vw, 90px);
   display: flex;
@@ -203,7 +211,9 @@ button { cursor: pointer; }
   min-height: 100vh;
   position: relative;
   overflow: hidden;
-  border-right: 1px solid #e0f2fe;
+  border-right: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 12px 0 35px rgba(15, 23, 42, 0.12);
+  z-index: 2;
 }
 .auth-intro::before {
   content: '';
@@ -370,12 +380,12 @@ button { cursor: pointer; }
   display: grid;
   place-items: center;
   padding: 32px;
-  background-color: #f8fafc;
-  background-image:
-    radial-gradient(at 85% 15%, rgba(224, 242, 254, 0.7) 0px, transparent 50%),
-    radial-gradient(at 15% 85%, rgba(219, 234, 254, 0.6) 0px, transparent 50%);
+  background: rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
   position: relative;
   overflow: hidden;
+  z-index: 2;
 }
 .login-panel::before {
   content: '';
@@ -385,26 +395,26 @@ button { cursor: pointer; }
   top: -160px;
   right: -160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(240, 249, 255, 0.95) 0%, rgba(224, 242, 254, 0.4) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
   filter: blur(55px);
   pointer-events: none;
-  animation: panelBlobFloat 14s ease-in-out infinite;
 }
 
 .login-card {
-  width: min(100%, 425px);
-  padding: 38px 34px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(14px);
-  border-radius: 18px;
-  border: 1.5px solid rgba(224, 242, 254, 0.9);
-  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 20px 45px -10px rgba(2, 132, 199, 0.08);
+  width: min(100%, 435px);
+  padding: 40px 36px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 10px 25px -5px rgba(2, 132, 199, 0.15);
   position: relative;
   z-index: 2;
   transition: box-shadow 0.35s ease, transform 0.35s var(--ease-spring), border-color 0.3s ease;
 }
 .login-card:hover {
-  box-shadow: 0 16px 42px -6px rgba(15, 23, 42, 0.08), 0 28px 55px -10px rgba(2, 132, 199, 0.14);
+  box-shadow: 0 32px 64px -12px rgba(15, 23, 42, 0.45), 0 14px 30px -5px rgba(2, 132, 199, 0.22);
   transform: translateY(-4px);
   border-color: #bae6fd;
 }
@@ -1663,7 +1673,7 @@ td small { margin-top: 3px; color: #64748b; }
 @media (max-width: 850px) {
   .auth-page { grid-template-columns: 1fr; }
   .auth-intro { display: none; }
-  .login-panel { min-height: 100vh; }
+  .login-panel { min-height: 100vh; background: rgba(15, 23, 42, 0.4); padding: 24px 16px; }
   .mobile-brand { display: flex; }
   .student-overview, .bottom-grid, .admin-layout { grid-template-columns: 1fr; }
   .admin-metrics { grid-template-columns: repeat(2, 1fr); }
