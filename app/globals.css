@@ -534,13 +534,125 @@ button { cursor: pointer; }
   justify-content: space-between;
   gap: 25px;
 }
-.pay-card > div:first-child { max-width: 360px; }
-.pay-card .primary-button { margin-top: 10px; }
+.pay-card > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.pay-card .primary-button {
+  margin-top: 10px;
+  width: 100%;
+}
+.upi-apps-section {
+  margin-top: 14px;
+}
+.upi-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.upi-apps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin-bottom: 12px;
+}
+.upi-app-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid #dbe4de;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s var(--ease-out);
+  box-shadow: 0 2px 6px rgba(24, 46, 35, 0.03);
+}
+.upi-app-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 14px rgba(24, 46, 35, 0.08);
+}
+.upi-app-btn.gpay-btn:hover {
+  border-color: #4285f4;
+  background: #f8fbff;
+}
+.upi-app-btn.phonepe-btn:hover {
+  border-color: #5f259f;
+  background: #faf6ff;
+}
+.upi-app-btn.paytm-btn:hover {
+  border-color: #00b9f5;
+  background: #f4fcff;
+}
+.upi-app-btn.bhim-btn:hover {
+  border-color: #00884d;
+  background: #f4faf6;
+}
+.upi-vpa-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #f2f6f4;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+.upi-vpa-box code {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.copy-btn {
+  background: white;
+  border: 1px solid #cbd8d0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.copy-btn:hover {
+  background: #eef7ee;
+  border-color: var(--green);
+}
+.upi-accepted-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.upi-accepted-tags span {
+  background: #edf3ef;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4a5c52;
+}
 .qr-wrap {
   min-width: 148px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   border-left: 1px solid var(--line);
   padding-left: 25px;

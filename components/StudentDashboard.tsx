@@ -13,6 +13,7 @@ export default function StudentDashboard() {
   const [student, setStudent] = useState<Student | null>(null);
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -49,6 +50,13 @@ export default function StudentDashboard() {
     router.replace("/login");
   }
 
+  function copyUpiId() {
+    const vpa = process.env.NEXT_PUBLIC_UPI_ID || "8688099587@ybl";
+    navigator.clipboard.writeText(vpa);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   if (loading || !student) {
     return (
       <div className="loading-screen animate-fade-in">
@@ -58,7 +66,17 @@ export default function StudentDashboard() {
     );
   }
 
-  const upi = `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "college@upi"}&pn=${encodeURIComponent(process.env.NEXT_PUBLIC_PAYEE_NAME || "College Fee")}&am=${student.due_fee + student.fine_fee}&cu=INR&tn=${encodeURIComponent(`Fee payment ${student.student_id}`)}`;
+  const vpa = process.env.NEXT_PUBLIC_UPI_ID || "8688099587@ybl";
+  const payee = process.env.NEXT_PUBLIC_PAYEE_NAME || "SITS";
+  const totalPayable = student.due_fee + student.fine_fee;
+  const note = `Fee payment ${student.student_id}`;
+
+  const baseUpiParams = `pa=${vpa}&pn=${encodeURIComponent(payee)}&am=${totalPayable}&cu=INR&tn=${encodeURIComponent(note)}`;
+  const genericUpiUri = `upi://pay?${baseUpiParams}`;
+  const gpayUri = `tez://upi/pay?${baseUpiParams}`;
+  const phonePeUri = `phonepe://pay?${baseUpiParams}`;
+  const paytmUri = `paytmmp://pay?${baseUpiParams}`;
+  const bhimUri = `upi://pay?${baseUpiParams}`;
 
   return (
     <main className="dashboard-shell">
@@ -91,9 +109,9 @@ export default function StudentDashboard() {
           </div>
           <div className={`balance-card animate-fade-up stagger-2 ${student.due_fee > 0 ? "has-due" : "settled"}`}>
             <div className="card-label">CURRENT BALANCE</div>
-            <span className="balance-amount">{currency(student.due_fee + student.fine_fee)}</span>
+            <span className="balance-amount">{currency(totalPayable)}</span>
             <span className="balance-caption">{student.due_fee > 0 ? "Amount payable" : "All payments completed"}</span>
-            <span className="status-pill">{feeStatus(student.due_fee + student.fine_fee)}</span>
+            <span className="status-pill">{feeStatus(totalPayable)}</span>
           </div>
         </section>
 
@@ -127,20 +145,67 @@ export default function StudentDashboard() {
               </div>
             )}
           </article>
+
           <article className="pay-card animate-fade-up stagger-5">
             <div>
               <p className="eyebrow">PAY ONLINE</p>
               <h2>Pay with UPI</h2>
-              <p>Scan using any UPI app. Your payment will be verified by the administration office.</p>
-              {student.due_fee + student.fine_fee > 0 && (
-                <a className="primary-button" href={upi}>
-                  Open UPI app
-                </a>
+              <p>Scan using any UPI app or select your preferred app below to pay instantly.</p>
+
+              {totalPayable > 0 ? (
+                <div className="upi-apps-section">
+                  <div className="upi-section-title">Choose Payment App</div>
+                  <div className="upi-apps-grid">
+                    <a className="upi-app-btn gpay-btn" href={gpayUri} title="Pay with Google Pay">
+                      <GPayIcon />
+                      <span>Google Pay</span>
+                    </a>
+                    <a className="upi-app-btn phonepe-btn" href={phonePeUri} title="Pay with PhonePe">
+                      <PhonePeIcon />
+                      <span>PhonePe</span>
+                    </a>
+                    <a className="upi-app-btn paytm-btn" href={paytmUri} title="Pay with Paytm">
+                      <PaytmIcon />
+                      <span>Paytm</span>
+                    </a>
+                    <a className="upi-app-btn bhim-btn" href={bhimUri} title="Pay with BHIM UPI">
+                      <BhimIcon />
+                      <span>BHIM UPI</span>
+                    </a>
+                  </div>
+
+                  <a className="primary-button" href={genericUpiUri}>
+                    <UpiIcon />
+                    <span>Open Any UPI App</span>
+                  </a>
+
+                  <div className="upi-vpa-box">
+                    <span>UPI ID: <code>{vpa}</code></span>
+                    <button type="button" className="copy-btn" onClick={copyUpiId}>
+                      {copied ? "Copied! ✓" : "Copy"}
+                    </button>
+                  </div>
+
+                  <div className="upi-accepted-tags">
+                    <small>Accepted:</small>
+                    <span>Google Pay</span>
+                    <span>PhonePe</span>
+                    <span>Paytm</span>
+                    <span>BHIM</span>
+                    <span>CRED</span>
+                    <span>Amazon Pay</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="success-text" style={{ marginTop: 14, fontWeight: 600 }}>
+                  ✓ All fees are fully settled. No payment required.
+                </p>
               )}
             </div>
+
             <div className="qr-wrap">
-              <QRCodeSVG value={upi} size={132} includeMargin />
-              <small>Scan to pay</small>
+              <QRCodeSVG value={genericUpiUri} size={132} includeMargin />
+              <small>Scan to pay {currency(totalPayable)}</small>
             </div>
           </article>
         </section>
@@ -155,5 +220,53 @@ function Fee({ label, value, tone = "" }: { label: string; value: number; tone?:
       <span>{label}</span>
       <strong>{currency(value)}</strong>
     </div>
+  );
+}
+
+function GPayIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+  );
+}
+
+function PhonePeIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="16" fill="#5f259f"/>
+      <path d="M18.8 8h-4.4c-.6 0-1.1.5-1.1 1.1v13.8c0 .6.5 1.1 1.1 1.1h2.2c.6 0 1.1-.5 1.1-1.1v-4.5h1.1c3.2 0 5.6-2.3 5.6-5.2s-2.4-5.2-5.6-5.2zm0 6.6h-1.1v-3h1.1c1.1 0 1.9.7 1.9 1.5s-.8 1.5-1.9 1.5z" fill="#ffffff"/>
+    </svg>
+  );
+}
+
+function PaytmIcon() {
+  return (
+    <svg width="22" height="18" viewBox="0 0 48 24" aria-hidden="true">
+      <rect width="48" height="24" rx="5" fill="#002e6e"/>
+      <text x="24" y="16.5" fill="#00b9f5" fontSize="13" fontWeight="900" fontFamily="sans-serif" textAnchor="middle">paytm</text>
+    </svg>
+  );
+}
+
+function BhimIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="6" fill="#00884d"/>
+      <path d="M7 16l9-10v8h9l-9 12v-8H7z" fill="#ffffff"/>
+      <path d="M16 6l9 10h-9V6z" fill="#f47920"/>
+    </svg>
+  );
+}
+
+function UpiIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M13.5 4.5L7.5 19.5h3l6-15h-3z" fill="#097939"/>
+      <path d="M16.5 4.5L10.5 19.5h3l6-15h-3z" fill="#ED752E"/>
+    </svg>
   );
 }
