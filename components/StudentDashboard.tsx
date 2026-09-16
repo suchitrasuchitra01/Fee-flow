@@ -59,6 +59,7 @@ export default function StudentDashboard() {
   // Step-by-Step Dashboard Workflow state
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
   const [viewMode, setViewMode] = useState<"stepper" | "all">("stepper");
+  const [isMobile, setIsMobile] = useState(false);
 
   function goToStep(step: 1 | 2 | 3 | 4) {
     setActiveStep(step);
@@ -73,6 +74,10 @@ export default function StudentDashboard() {
   }
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+    }
+
     // Read local cache immediately
     try {
       const localVpa = localStorage.getItem("feeflow_upi_id");
@@ -1385,6 +1390,16 @@ export default function StudentDashboard() {
               <span>🧾 I have paid in {activeApp.name} → Get Fee Receipt</span>
             </button>
 
+            {!isMobile && (
+              <div className="desktop-scan-banner animate-fade-in">
+                <span className="desktop-banner-icon">📱</span>
+                <div>
+                  <strong>To Pay via {activeApp.name}:</strong>
+                  <p>Scan the QR code above with your phone camera or {activeApp.name} app.</p>
+                </div>
+              </div>
+            )}
+
             <div className="modal-action-row">
               <button
                 type="button"
@@ -1394,17 +1409,32 @@ export default function StudentDashboard() {
                   openGatewayModal("upi");
                 }}
               >
-                <span>🌐 View All Options (UPI, Debit/Credit Card, Net Banking)</span>
+                <span>🌐 Open Payment Gateway (Cards, Net Banking, UPI)</span>
                 <span aria-hidden="true">→</span>
               </button>
 
-              <a
-                href={activeApp.uri}
-                className="primary-button"
-                style={{ marginTop: 0 }}
-              >
-                <span>Launch {activeApp.name} (Mobile)</span>
-              </a>
+              {isMobile ? (
+                <a
+                  href={activeApp.uri}
+                  className="primary-button"
+                  style={{ marginTop: 0 }}
+                >
+                  <span>🚀 Open in {activeApp.name}</span>
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className="primary-button"
+                  style={{ marginTop: 0 }}
+                  onClick={() => {
+                    setActiveApp(null);
+                    openGatewayModal("upi");
+                  }}
+                  title="Pay directly on this computer via Payment Gateway"
+                >
+                  <span>💻 Pay on this PC via Gateway →</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
