@@ -56,6 +56,22 @@ export default function StudentDashboard() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [confirmError, setConfirmError] = useState("");
 
+  // Step-by-Step Dashboard Workflow state
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
+  const [viewMode, setViewMode] = useState<"stepper" | "all">("stepper");
+
+  function goToStep(step: 1 | 2 | 3 | 4) {
+    setActiveStep(step);
+    if (typeof window !== "undefined") {
+      const topElem = document.querySelector(".stepper-header-card");
+      if (topElem) {
+        topElem.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.scrollTo({ top: 120, behavior: "smooth" });
+      }
+    }
+  }
+
   useEffect(() => {
     // Read local cache immediately
     try {
@@ -236,6 +252,7 @@ export default function StudentDashboard() {
 
     setSelectedReceiptId(receipt.id);
     setShowReceiptModal(true);
+    setActiveStep(3);
   }
 
 
@@ -335,6 +352,7 @@ export default function StudentDashboard() {
       setShowConfirmModal(false);
       setSelectedReceiptId(generatedReceipt.id);
       setShowReceiptModal(true);
+      setActiveStep(3);
     } catch (err) {
       console.warn("Payment recording network error, fallback to local:", err);
       const fallbackReceipt: FeeReceipt = {
@@ -373,6 +391,7 @@ export default function StudentDashboard() {
       setShowConfirmModal(false);
       setSelectedReceiptId(fallbackReceipt.id);
       setShowReceiptModal(true);
+      setActiveStep(3);
     } finally {
       setSubmittingPayment(false);
     }
@@ -485,8 +504,7 @@ export default function StudentDashboard() {
               type="button"
               className="receipts-header-pill animate-fade-in"
               onClick={() => {
-                setSelectedReceiptId(receipts[0].id);
-                setShowReceiptModal(true);
+                goToStep(3);
               }}
               title="View all your payment receipts"
             >
@@ -498,7 +516,91 @@ export default function StudentDashboard() {
           )}
         </div>
 
-        <section className="student-overview">
+        {/* Interactive Step-by-Step Stepper Header */}
+        <div className="stepper-header-card animate-fade-up">
+          <div className="stepper-header-top">
+            <div className="stepper-title-area">
+              <span className="stepper-kicker">STEP-BY-STEP WORKFLOW</span>
+              <h2 className="stepper-headline">
+                {activeStep === 1 && "Step 1: Fee Assessment & Breakdown"}
+                {activeStep === 2 && "Step 2: Online Fee Payment Gateway"}
+                {activeStep === 3 && "Step 3: Official Receipts & Records"}
+                {activeStep === 4 && "Step 4: AI Fee Advisory & Helpdesk"}
+              </h2>
+            </div>
+            <div className="view-mode-toggle">
+              <button
+                type="button"
+                className={`mode-toggle-btn ${viewMode === "stepper" ? "active" : ""}`}
+                onClick={() => setViewMode("stepper")}
+                title="Focused step-by-step navigation"
+              >
+                <span>👣 Step-by-Step</span>
+              </button>
+              <button
+                type="button"
+                className={`mode-toggle-btn ${viewMode === "all" ? "active" : ""}`}
+                onClick={() => setViewMode("all")}
+                title="View all sections together on a single page"
+              >
+                <span>📄 View All</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="stepper-track-wrap">
+            <div className="stepper-progress-track">
+              <div
+                className="stepper-progress-fill"
+                style={{ width: `${((activeStep - 1) / 3) * 100}%` }}
+              />
+            </div>
+            <div className="stepper-steps-grid">
+              {[
+                { id: 1 as const, title: "Fee Overview", subtitle: "Tuition & Fines", icon: "📋" },
+                { id: 2 as const, title: "Pay Online", subtitle: "UPI & Cards", icon: "💳" },
+                { id: 3 as const, title: "Fee Receipts", subtitle: `${receipts.length} Issued`, icon: "🧾" },
+                { id: 4 as const, title: "AI Summary", subtitle: "Advisory & Help", icon: "📊" },
+              ].map((s) => {
+                const isCompleted = s.id < activeStep;
+                const isActive = s.id === activeStep;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`stepper-step-pill ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
+                    onClick={() => {
+                      goToStep(s.id);
+                      if (viewMode === "all") {
+                        const target = document.getElementById(`step-section-${s.id}`);
+                        if (target) target.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                  >
+                    <div className="stepper-pill-circle">
+                      {isCompleted ? "✓" : s.id}
+                    </div>
+                    <div className="stepper-pill-text">
+                      <strong className="stepper-pill-title">{s.icon} {s.title}</strong>
+                      <span className="stepper-pill-sub">{s.subtitle}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* STEP 1: FEE OVERVIEW & DUES */}
+        {(viewMode === "all" || activeStep === 1) && (
+          <div className="step-pane animate-fade-in" id="step-section-1">
+            {viewMode === "all" && (
+              <div className="step-section-divider">
+                <span className="step-divider-tag">STEP 1 OF 4</span>
+                <h3>Fee Overview & Academic Dues</h3>
+              </div>
+            )}
+            <section className="student-overview">
           <div className="profile-card animate-fade-up stagger-1">
             <div className="card-label">STUDENT DETAILS</div>
             <h2>{student.name}</h2>
@@ -568,8 +670,7 @@ export default function StudentDashboard() {
                   className="primary-button pay-fine-action-btn"
                   onClick={() => {
                     handleSelectFeeCategory("fine");
-                    const payElem = document.querySelector(".pay-card");
-                    if (payElem) payElem.scrollIntoView({ behavior: "smooth" });
+                    goToStep(2);
                   }}
                   title="Pay this fine fee separately"
                 >
@@ -580,7 +681,33 @@ export default function StudentDashboard() {
           </div>
         </section>
 
-        <section className="pay-card animate-fade-up stagger-4">
+            {/* Step 1 Navigation Footer */}
+            <div className="step-navigation-footer animate-fade-up">
+              <div className="step-nav-info">
+                <span className="step-nav-indicator">Step 1 of 4: Fee Review Completed</span>
+                <p className="step-nav-sub">Next, proceed to pay academic tuition or late fine fees online.</p>
+              </div>
+              <button
+                type="button"
+                className="primary-button step-nav-next-btn"
+                onClick={() => goToStep(2)}
+              >
+                <span>Proceed to Pay Fees (Step 2) →</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: MAKE PAYMENT ONLINE */}
+        {(viewMode === "all" || activeStep === 2) && (
+          <div className="step-pane animate-fade-in" id="step-section-2">
+            {viewMode === "all" && (
+              <div className="step-section-divider">
+                <span className="step-divider-tag">STEP 2 OF 4</span>
+                <h3>Online Fee Payment Gateway</h3>
+              </div>
+            )}
+            <section className="pay-card animate-fade-up stagger-4">
           <div>
             <p className="eyebrow">PAY ONLINE</p>
             <h2>Fee Payment Gateway</h2>
@@ -971,25 +1098,222 @@ export default function StudentDashboard() {
             </div>
         </section>
 
-        {/* Gemini AI Fee Summary (At the bottom of the page) */}
-        <section className="insight-card animate-fade-up stagger-5">
-          <div className="insight-header">
-            <span className="insight-sparkle-icon" aria-hidden="true">✨</span>
-            <div>
-              <p className="eyebrow" style={{ margin: 0 }}>GEMINI INSIGHT</p>
-              <h2 style={{ margin: "2px 0 0" }}>Your fee summary</h2>
+            {/* Step 2 Navigation Footer */}
+            <div className="step-navigation-footer animate-fade-up">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => goToStep(1)}
+              >
+                <span>← Back to Fee Overview (Step 1)</span>
+              </button>
+              <button
+                type="button"
+                className="primary-button step-nav-next-btn"
+                onClick={() => goToStep(3)}
+              >
+                <span>View Fee Receipts (Step 3) →</span>
+              </button>
             </div>
           </div>
-          {summary ? (
-            <p className="animate-fade-in" style={{ marginTop: 12 }}>{summary}</p>
-          ) : (
-            <div className="shimmer-box" style={{ marginTop: 12 }}>
-              <div className="shimmer-line" />
-              <div className="shimmer-line" />
-              <div className="shimmer-line short" />
+        )}
+
+        {/* STEP 3: OFFICIAL FEE RECEIPTS & RECORDS */}
+        {(viewMode === "all" || activeStep === 3) && (
+          <div className="step-pane animate-fade-in" id="step-section-3">
+            {viewMode === "all" && (
+              <div className="step-section-divider">
+                <span className="step-divider-tag">STEP 3 OF 4</span>
+                <h3>Official Fee Receipts & Records</h3>
+              </div>
+            )}
+            <section className="receipts-gallery-section animate-fade-up">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">OFFICIAL INSTITUTIONAL RECORDS</p>
+                  <h2>Payment Receipts & Acknowledgements</h2>
+                  <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>
+                    Verified computer-generated receipts for tuition and fine fee payments.
+                  </p>
+                </div>
+                <div className="receipts-section-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => openPaymentConfirmation("UPI App / QR Scanner")}
+                  >
+                    <span>🧾 Claim Receipt with UTR</span>
+                  </button>
+                </div>
+              </div>
+
+              {receipts.length === 0 ? (
+                <div className="empty-receipts-box animate-fade-in">
+                  <span className="empty-receipts-icon">🧾</span>
+                  <h3>No Fee Receipts Yet</h3>
+                  <p>
+                    When you complete a payment using UPI, Debit Card, Credit Card, or Net Banking in Step 2,
+                    your official verifiable SITS fee acknowledgement will be archived here.
+                  </p>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => goToStep(2)}
+                    style={{ marginTop: 12 }}
+                  >
+                    <span>Proceed to Pay Fees (Step 2) →</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="receipts-cards-grid animate-fade-in">
+                  {receipts.map((r, idx) => (
+                    <div key={r.id} className="receipt-summary-card">
+                      <div className="r-card-top">
+                        <div className="r-card-id-block">
+                          <span className="r-card-badge">Receipt #{receipts.length - idx}</span>
+                          <strong className="r-card-id">{r.id}</strong>
+                        </div>
+                        <span className="receipt-status-pill">Verified ✓</span>
+                      </div>
+
+                      <div className="r-card-amount-row">
+                        <span className="r-card-amount-label">Amount Paid</span>
+                        <strong className="r-card-amount">{currency(r.amount_paid)}</strong>
+                      </div>
+
+                      <div className="r-card-meta-list">
+                        <div className="r-meta-item">
+                          <span>Payment Mode:</span>
+                          <strong>{r.payment_mode}</strong>
+                        </div>
+                        {r.utr_number && (
+                          <div className="r-meta-item">
+                            <span>UTR / Ref No:</span>
+                            <code className="monospace">{r.utr_number}</code>
+                          </div>
+                        )}
+                        <div className="r-meta-item">
+                          <span>Date & Time:</span>
+                          <span>{new Date(r.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                        </div>
+                      </div>
+
+                      <div className="r-card-actions">
+                        <button
+                          type="button"
+                          className="primary-button r-view-btn"
+                          onClick={() => {
+                            setSelectedReceiptId(r.id);
+                            setShowReceiptModal(true);
+                          }}
+                        >
+                          <span>🖨️ View & Print Official Receipt</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Step 3 Navigation Footer */}
+            <div className="step-navigation-footer animate-fade-up">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => goToStep(2)}
+              >
+                <span>← Back to Payment (Step 2)</span>
+              </button>
+              <button
+                type="button"
+                className="primary-button step-nav-next-btn"
+                onClick={() => goToStep(4)}
+              >
+                <span>View AI Summary & Helpdesk (Step 4) →</span>
+              </button>
             </div>
-          )}
-        </section>
+          </div>
+        )}
+
+        {/* STEP 4: AI SUMMARY & HELPDESK */}
+        {(viewMode === "all" || activeStep === 4) && (
+          <div className="step-pane animate-fade-in" id="step-section-4">
+            {viewMode === "all" && (
+              <div className="step-section-divider">
+                <span className="step-divider-tag">STEP 4 OF 4</span>
+                <h3>Institutional AI Summary & Accounts Helpdesk</h3>
+              </div>
+            )}
+            <section className="insight-card animate-fade-up stagger-5">
+              <div className="insight-header">
+                <span className="insight-sparkle-icon" aria-hidden="true">✨</span>
+                <div>
+                  <p className="eyebrow" style={{ margin: 0 }}>GEMINI INSIGHT</p>
+                  <h2 style={{ margin: "2px 0 0" }}>Your fee summary</h2>
+                </div>
+              </div>
+              {summary ? (
+                <p className="animate-fade-in" style={{ marginTop: 12 }}>{summary}</p>
+              ) : (
+                <div className="shimmer-box" style={{ marginTop: 12 }}>
+                  <div className="shimmer-line" />
+                  <div className="shimmer-line" />
+                  <div className="shimmer-line short" />
+                </div>
+              )}
+            </section>
+
+            <section className="accounts-helpdesk-card animate-fade-up">
+              <div className="accounts-helpdesk-header">
+                <span className="helpdesk-icon">🏛️</span>
+                <div>
+                  <p className="eyebrow" style={{ margin: 0 }}>OFFICIAL CONTACT</p>
+                  <h3 style={{ margin: "2px 0 0", fontSize: 18, color: "#0f172a" }}>Accounts Branch & Fee Helpdesk</h3>
+                </div>
+              </div>
+              <p className="muted" style={{ margin: "10px 0 16px", fontSize: 13 }}>
+                For fee concessions, scholarship disbursements, challan verification, or installment inquiries, contact the institutional accounts desk.
+              </p>
+              <div className="helpdesk-details-grid">
+                <div className="helpdesk-item">
+                  <span className="helpdesk-label">Campus Location</span>
+                  <strong>Room 104, Administrative Block, SITS Narapally, Hyderabad</strong>
+                </div>
+                <div className="helpdesk-item">
+                  <span className="helpdesk-label">Helpdesk Phone</span>
+                  <strong>+91 40 2456 7890 / +91 86880 99587</strong>
+                </div>
+                <div className="helpdesk-item">
+                  <span className="helpdesk-label">Official Email</span>
+                  <strong>accounts@siddhartha.ac.in</strong>
+                </div>
+                <div className="helpdesk-item">
+                  <span className="helpdesk-label">Office Hours</span>
+                  <strong>Mon – Sat: 9:00 AM – 4:30 PM (Counter closes at 3:30 PM)</strong>
+                </div>
+              </div>
+            </section>
+
+            {/* Step 4 Navigation Footer */}
+            <div className="step-navigation-footer animate-fade-up">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => goToStep(3)}
+              >
+                <span>← Back to Fee Receipts (Step 3)</span>
+              </button>
+              <button
+                type="button"
+                className="primary-button step-nav-next-btn"
+                onClick={() => goToStep(1)}
+              >
+                <span>↺ Return to Fee Overview (Step 1)</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Interactive Modal for Desktop & Mobile UPI App Guidance & Official Websites */}
