@@ -1716,47 +1716,7 @@ td small { margin-top: 3px; color: #64748b; }
   gap: 10px;
   flex-wrap: wrap;
 }
-.reset-fees-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: #ffffff;
-  border: 1.5px solid #0284c7;
-  border-radius: 999px;
-  color: #0284c7;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
-  transition: all 0.22s var(--ease-spring);
-}
-.reset-fees-pill:hover {
-  background: #f0f9ff;
-  border-color: #0369a1;
-  color: #0369a1;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.16);
-}
-.reset-fees-pill:active {
-  transform: translateY(0) scale(0.97);
-}
-.reset-balance-btn {
-  background: #f0f9ff;
-  border: 1.5px dashed #0284c7;
-  color: #0284c7;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.reset-balance-btn:hover {
-  background: #e0f2fe;
-  border-color: #0369a1;
-  color: #0369a1;
-}
+
 .receipts-header-pill {
   display: inline-flex;
   align-items: center;
@@ -3189,55 +3149,99 @@ td small { margin-top: 3px; color: #64748b; }
    Separated Fine Fees & Category Selectors
    ========================================================================== */
 
-/* Fine Balance Card in Overview */
-.fine-balance-card {
+/* Standalone Late Fine Section Card */
+.fine-section-card {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
   border-radius: 16px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  padding: 24px 28px;
+  margin-bottom: 24px;
   box-shadow: var(--shadow-sm);
   transition: all 0.25s ease;
 }
-.fine-balance-card.has-fine {
+.fine-section-card.has-fine {
   border-color: #fecaca;
-  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
-  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.09);
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.08);
 }
-.fine-balance-card.has-fine .card-label {
-  color: #dc2626;
+.fine-section-card.no-fine {
+  border-color: #bbf7d0;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
 }
-.fine-balance-amount {
-  font: 800 clamp(24px, 2.6vw, 32px) 'Outfit', sans-serif;
-  color: #0f172a;
-  margin: 6px 0 2px;
+.fine-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
 }
-.fine-balance-card.has-fine .fine-balance-amount {
-  color: #dc2626;
+.fine-card-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 600px;
 }
-.fine-balance-caption {
-  font-size: 12px;
-  color: #64748b;
-  margin-bottom: 8px;
+.fine-badge-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+  background: #f8fafc;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
-.pay-fine-quick-btn {
-  padding: 4px 10px;
+.fine-section-card.has-fine .fine-badge-icon {
   background: #fef2f2;
-  border: 1.5px dashed #ef4444;
-  border-radius: 6px;
-  color: #dc2626;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-color: #fecaca;
 }
-.pay-fine-quick-btn:hover {
-  background: #fee2e2;
-  border-color: #b91c1c;
-  color: #b91c1c;
-  transform: translateY(-1px);
+.fine-section-card.no-fine .fine-badge-icon {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #059669;
+}
+.fine-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.fine-card-amount-wrap {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.fine-label {
+  display: block;
+  font: 600 11px 'DM Mono', monospace;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+.fine-number {
+  display: block;
+  font: 800 28px 'Outfit', sans-serif;
+  margin: 1px 0;
+  line-height: 1.1;
+}
+.pay-fine-action-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  border-radius: 999px !important;
+  padding: 10px 22px !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25) !important;
+  transition: all 0.22s var(--ease-spring) !important;
+}
+.pay-fine-action-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35) !important;
 }
 
 /* Fee Category Selector Box in Payment Section */

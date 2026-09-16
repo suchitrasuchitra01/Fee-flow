@@ -513,33 +513,22 @@ export default function StudentDashboard() {
             <h1>Good to see you, {student.name.split(" ")[0]}.</h1>
             <p className="muted">Here is the latest overview of your academic fee account.</p>
           </div>
-          <div className="dashboard-intro-actions">
+          {receipts.length > 0 && (
             <button
               type="button"
-              className="reset-fees-pill animate-fade-in"
-              onClick={() => handleResetFees(false)}
-              disabled={resettingFees}
-              title="Reset fee balance back to ₹45,000 due for testing"
+              className="receipts-header-pill animate-fade-in"
+              onClick={() => {
+                setSelectedReceiptId(receipts[0].id);
+                setShowReceiptModal(true);
+              }}
+              title="View all your payment receipts"
             >
-              <span>{resettingFees ? "Resetting..." : "🔄 Reset Due Fees (₹45,000)"}</span>
+              <span className="receipts-pill-icon">🧾</span>
+              <span className="receipts-pill-text">
+                Fee Receipts <strong>({receipts.length})</strong>
+              </span>
             </button>
-            {receipts.length > 0 && (
-              <button
-                type="button"
-                className="receipts-header-pill animate-fade-in"
-                onClick={() => {
-                  setSelectedReceiptId(receipts[0].id);
-                  setShowReceiptModal(true);
-                }}
-                title="View all your payment receipts"
-              >
-                <span className="receipts-pill-icon">🧾</span>
-                <span className="receipts-pill-text">
-                  Fee Receipts <strong>({receipts.length})</strong>
-                </span>
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         <section className="student-overview">
@@ -554,42 +543,62 @@ export default function StudentDashboard() {
 
           {/* Academic Tuition Fee Due Card */}
           <div className={`balance-card animate-fade-up stagger-2 ${student.due_fee > 0 ? "has-due" : "settled"}`}>
-            <div className="card-label">TUITION FEE DUE</div>
+            <div className="card-label">CURRENT TUITION DUE</div>
             <span className="balance-amount">{currency(student.due_fee)}</span>
-            <span className="balance-caption">{student.due_fee > 0 ? "Academic fee balance" : "Tuition fully settled"}</span>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
-              <span className={`status-pill ${student.due_fee > 0 ? "warning" : "settled"}`}>
-                {student.due_fee > 0 ? "Due" : "Settled ✓"}
-              </span>
-              {student.due_fee === 0 && student.fine_fee === 0 && (
-                <button
-                  type="button"
-                  className="reset-balance-btn"
-                  onClick={() => handleResetFees(false)}
-                  disabled={resettingFees}
-                  title="Reset fees back for testing"
-                >
-                  {resettingFees ? "Resetting..." : "🔄 Reset Fees"}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Separate Late Fine Fee Card */}
-          <div className={`fine-balance-card animate-fade-up stagger-3 ${student.fine_fee > 0 ? "has-fine" : "settled"}`}>
-            <div className="card-label">LATE FINE FEE</div>
-            <span className="fine-balance-amount">{currency(student.fine_fee)}</span>
-            <span className="fine-balance-caption">
-              {student.fine_fee > 0 ? "Overdue penalty" : "No fine active"}
+            <span className="balance-caption">{student.due_fee > 0 ? "Tuition balance payable" : "All tuition fees completed"}</span>
+            <span className={`status-pill ${student.due_fee > 0 ? "warning" : "settled"}`}>
+              {student.due_fee > 0 ? "Due" : "Settled ✓"}
             </span>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
-              <span className={`status-pill ${student.fine_fee > 0 ? "danger" : "settled"}`}>
-                {student.fine_fee > 0 ? "Fine Active ⚠️" : "Cleared ✓"}
-              </span>
+          </div>
+        </section>
+
+        {/* Academic Tuition Fee Breakdown Card */}
+        <section className="fee-card animate-fade-up stagger-3">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">ACADEMIC TUITION BREAKDOWN</p>
+              <h2>Academic year 2026–27</h2>
+            </div>
+            <span className="status-pill neutral">Updated today</span>
+          </div>
+          <div className="fee-grid">
+            <Fee label="Total tuition fee" value={student.total_fee} />
+            <Fee label="Paid fee" value={student.paid_fee} tone="success" />
+            <Fee label="Remaining due" value={student.due_fee} tone="warning" />
+          </div>
+        </section>
+
+        {/* Separate Standalone Late Fine Fees Section */}
+        <section className={`fine-section-card animate-fade-up stagger-4 ${student.fine_fee > 0 ? "has-fine" : "no-fine"}`}>
+          <div className="fine-card-content">
+            <div className="fine-card-info">
+              <span className="fine-badge-icon">{student.fine_fee > 0 ? "⚠️" : "✓"}</span>
+              <div>
+                <p className="eyebrow" style={{ color: student.fine_fee > 0 ? "#dc2626" : "#059669", marginBottom: 4 }}>
+                  SEPARATE PENALTY ACCOUNT
+                </p>
+                <h3 style={{ margin: "0 0 6px", fontSize: 21, color: "#0f172a" }}>Late Fine Fees</h3>
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+                  {student.fine_fee > 0
+                    ? "Late submission fee penalty applied separately from your academic tuition fee."
+                    : "No late fines or penalty charges active on your institutional record."}
+                </p>
+              </div>
+            </div>
+            <div className="fine-card-actions">
+              <div className="fine-card-amount-wrap">
+                <span className="fine-label">Fine Fee Balance</span>
+                <span className="fine-number" style={{ color: student.fine_fee > 0 ? "#dc2626" : "#059669" }}>
+                  {currency(student.fine_fee)}
+                </span>
+                <span className={`status-pill ${student.fine_fee > 0 ? "danger" : "settled"}`}>
+                  {student.fine_fee > 0 ? "Fine Pending ⚠️" : "Cleared ✓"}
+                </span>
+              </div>
               {student.fine_fee > 0 && (
                 <button
                   type="button"
-                  className="pay-fine-quick-btn"
+                  className="primary-button pay-fine-action-btn"
                   onClick={() => {
                     handleSelectFeeCategory("fine");
                     const payElem = document.querySelector(".pay-card");
@@ -597,26 +606,10 @@ export default function StudentDashboard() {
                   }}
                   title="Pay this fine fee separately"
                 >
-                  Pay Fine Only
+                  <span>Pay Late Fine ({currency(student.fine_fee)}) →</span>
                 </button>
               )}
             </div>
-          </div>
-        </section>
-
-        <section className="fee-card animate-fade-up stagger-3">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">FEE BREAKDOWN</p>
-              <h2>Academic year 2026–27</h2>
-            </div>
-            <span className="status-pill neutral">Updated today</span>
-          </div>
-          <div className="fee-grid">
-            <Fee label="Total fee" value={student.total_fee} />
-            <Fee label="Paid fee" value={student.paid_fee} tone="success" />
-            <Fee label="Due fee" value={student.due_fee} tone="warning" />
-            <Fee label="Fine fee" value={student.fine_fee} tone="danger" />
           </div>
         </section>
 
