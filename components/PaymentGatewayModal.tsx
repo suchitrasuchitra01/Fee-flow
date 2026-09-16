@@ -359,6 +359,9 @@ export default function PaymentGatewayModal({
                   <div>
                     <h4>Bank Authentication (3D Secure 2.0)</h4>
                     <p>Enter the 6-digit OTP sent to your registered mobile number ending in •••• 4210</p>
+                    <small className="otp-demo-badge">
+                      💡 <b>Simulation Mode:</b> No real SMS is sent. Use test OTP <strong>123456</strong> or click <b>Auto-fill Test OTP</b>.
+                    </small>
                   </div>
                 </div>
 
@@ -772,3 +775,4 @@ export default function PaymentGatewayModal({
     </div>
   );
 }
+
