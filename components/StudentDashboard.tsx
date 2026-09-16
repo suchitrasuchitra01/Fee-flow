@@ -55,7 +55,6 @@ export default function StudentDashboard() {
   const [confirmUtr, setConfirmUtr] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [confirmError, setConfirmError] = useState("");
-  const [resettingFees, setResettingFees] = useState(false);
 
   useEffect(() => {
     // Read local cache immediately
@@ -239,39 +238,7 @@ export default function StudentDashboard() {
     setShowReceiptModal(true);
   }
 
-  async function handleResetFees(clearReceipts = false) {
-    if (!student) return;
-    setResettingFees(true);
-    try {
-      const res = await fetch("/api/students/reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: student.student_id,
-          total_fee: 100000,
-          paid_fee: 57000,
-          due_fee: 43000,
-          fine_fee: 1500,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.student) {
-        setStudent(data.student);
-        setFeeCategory("all");
-        setCustomAmount(null);
-        if (clearReceipts) {
-          setReceipts([]);
-          try {
-            localStorage.removeItem(`feeflow_receipts_${student.student_id}`);
-          } catch {}
-        }
-      }
-    } catch (err) {
-      console.error("Error resetting fee:", err);
-    } finally {
-      setResettingFees(false);
-    }
-  }
+
 
   function openPaymentConfirmation(appName = "UPI App / QR Scanner") {
     const totalDue = student ? student.due_fee + student.fine_fee : 0;
