@@ -54,6 +54,7 @@ export default function StudentDashboard() {
   const [confirmUtr, setConfirmUtr] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [confirmError, setConfirmError] = useState("");
+  const [resettingFees, setResettingFees] = useState(false);
 
   useEffect(() => {
     // Read local cache immediately
@@ -220,6 +221,38 @@ export default function StudentDashboard() {
 
     setSelectedReceiptId(receipt.id);
     setShowReceiptModal(true);
+  }
+
+  async function handleResetFees(clearReceipts = false) {
+    if (!student) return;
+    setResettingFees(true);
+    try {
+      const res = await fetch("/api/students/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: student.student_id,
+          total_fee: 100000,
+          paid_fee: 55000,
+          due_fee: 45000,
+          fine_fee: 0,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.student) {
+        setStudent(data.student);
+        if (clearReceipts) {
+          setReceipts([]);
+          try {
+            localStorage.removeItem(`feeflow_receipts_${student.student_id}`);
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.error("Error resetting fee:", err);
+    } finally {
+      setResettingFees(false);
+    }
   }
 
   function openPaymentConfirmation(appName = "UPI App / QR Scanner") {
@@ -445,22 +478,33 @@ export default function StudentDashboard() {
             <h1>Good to see you, {student.name.split(" ")[0]}.</h1>
             <p className="muted">Here is the latest overview of your academic fee account.</p>
           </div>
-          {receipts.length > 0 && (
+          <div className="dashboard-intro-actions">
             <button
               type="button"
-              className="receipts-header-pill animate-fade-in"
-              onClick={() => {
-                setSelectedReceiptId(receipts[0].id);
-                setShowReceiptModal(true);
-              }}
-              title="View all your payment receipts"
+              className="reset-fees-pill animate-fade-in"
+              onClick={() => handleResetFees(false)}
+              disabled={resettingFees}
+              title="Reset fee balance back to ₹45,000 due for testing"
             >
-              <span className="receipts-pill-icon">🧾</span>
-              <span className="receipts-pill-text">
-                Fee Receipts <strong>({receipts.length})</strong>
-              </span>
+              <span>{resettingFees ? "Resetting..." : "🔄 Reset Due Fees (₹45,000)"}</span>
             </button>
-          )}
+            {receipts.length > 0 && (
+              <button
+                type="button"
+                className="receipts-header-pill animate-fade-in"
+                onClick={() => {
+                  setSelectedReceiptId(receipts[0].id);
+                  setShowReceiptModal(true);
+                }}
+                title="View all your payment receipts"
+              >
+                <span className="receipts-pill-icon">🧾</span>
+                <span className="receipts-pill-text">
+                  Fee Receipts <strong>({receipts.length})</strong>
+                </span>
+              </button>
+            )}
+          </div>
         </div>
 
         <section className="student-overview">
@@ -476,7 +520,20 @@ export default function StudentDashboard() {
             <div className="card-label">CURRENT BALANCE</div>
             <span className="balance-amount">{currency(totalPayable)}</span>
             <span className="balance-caption">{student.due_fee > 0 ? "Amount payable" : "All payments completed"}</span>
-            <span className="status-pill">{feeStatus(totalPayable)}</span>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
+              <span className="status-pill">{feeStatus(totalPayable)}</span>
+              {student.due_fee === 0 && (
+                <button
+                  type="button"
+                  className="reset-balance-btn"
+                  onClick={() => handleResetFees(false)}
+                  disabled={resettingFees}
+                  title="Reset due fee back to ₹45,000 for testing"
+                >
+                  {resettingFees ? "Resetting..." : "🔄 Reset Due Fees"}
+                </button>
+              )}
+            </div>
           </div>
         </section>
 
