@@ -2292,3 +2292,775 @@ td small { margin-top: 3px; color: #64748b; }
     text-align: left;
   }
 }
+
+/* ==========================================================================
+   Unified Multi-Option Payment Gateway (UPI, Debit, Credit, Net Banking)
+   ========================================================================== */
+
+/* Payment Modes Selector Tabs (inside Pay Online Card) */
+.payment-modes-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 16px;
+}
+.pay-mode-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.22s var(--ease-spring);
+}
+.pay-mode-tab:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+}
+.pay-mode-tab.active {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12);
+}
+
+/* Gateway Launcher Box in Pay Card */
+.gateway-launcher-box {
+  margin: 16px 0 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1.5px solid #bae6fd;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gateway-launch-main-btn {
+  width: 100%;
+  margin-top: 0;
+  padding: 12px 20px;
+  font-size: 13.5px;
+  display: flex;
+  justify-content: space-between;
+}
+.gateway-launcher-sub {
+  font-size: 11px;
+  color: #0369a1;
+  text-align: center;
+  font-weight: 500;
+}
+.open-any-upi-btn {
+  gap: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+/* Gateway Switcher inside App Guide Modal */
+.modal-gateway-switch-btn {
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
+  border: 1.5px solid #bae6fd !important;
+  font-weight: 800 !important;
+}
+.modal-gateway-switch-btn:hover {
+  background: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+  color: #0284c7 !important;
+}
+
+/* Gateway Modal Backdrop & Dialog */
+.gateway-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  z-index: 2500;
+  padding: 20px;
+  overflow-y: auto;
+  animation: fadeIn 0.22s ease-out;
+}
+.gateway-modal-dialog {
+  max-width: 860px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 24px 60px -8px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUpFade 0.3s var(--ease-spring);
+}
+
+/* Gateway Header */
+.gateway-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.gateway-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gateway-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gateway-logo-img {
+  width: 38px;
+  height: auto;
+  object-fit: contain;
+}
+.gateway-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0369a1;
+  letter-spacing: -0.2px;
+}
+.gateway-subtitle {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+}
+.gateway-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.gateway-amount-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+.gateway-amount-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0369a1;
+  letter-spacing: 0.5px;
+}
+.gateway-amount-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0284c7;
+}
+.gateway-close-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.gateway-close-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: scale(1.06);
+}
+
+/* Gateway Security Bar */
+.gateway-security-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  background: #f0f9ff;
+  border-bottom: 1px solid #e0f2fe;
+  font-size: 11.5px;
+  color: #334155;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gateway-student-meta code {
+  font-family: 'DM Mono', monospace;
+  font-weight: 700;
+  color: #0369a1;
+}
+.gateway-security-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+/* Gateway Body Split Layout */
+.gateway-body {
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  min-height: 440px;
+}
+.gateway-sidebar {
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gateway-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  width: 100%;
+}
+.gateway-nav-btn:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  transform: translateX(3px);
+}
+.gateway-nav-btn.active {
+  background: #e0f2fe;
+  border-color: #bae6fd;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
+}
+.gateway-nav-btn.active strong {
+  color: #0369a1;
+}
+.gateway-nav-btn .nav-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.gateway-nav-btn .nav-text strong {
+  display: block;
+  font-size: 13px;
+  color: #1e293b;
+}
+.gateway-nav-btn .nav-text small {
+  display: block;
+  font-size: 10.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Active Payment Pane */
+.gateway-content-area {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+}
+.gateway-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.pane-header {
+  margin-bottom: 20px;
+}
+.pane-header h3 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.pane-header p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.card-network-pill {
+  font: 700 11px 'DM Mono', monospace;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+}
+
+/* UPI Mode Grid */
+.gateway-upi-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.gateway-qr-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+.gateway-qr-box {
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.gateway-qr-box small {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 6px;
+  max-width: 140px;
+}
+.qr-payee-note {
+  font-size: 10.5px;
+  color: #64748b;
+  text-align: center;
+}
+.gateway-upi-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.upi-options-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+.gateway-upi-app-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.upi-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+.upi-quick-btn:hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.12);
+}
+.upi-app-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.upi-app-dot.gpay { background: #4285f4; }
+.upi-app-dot.phonepe { background: #5f259f; }
+.upi-app-dot.paytm { background: #00b9f5; }
+.upi-app-dot.bhim { background: #00884d; }
+
+.upi-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 4px 0;
+}
+.upi-divider::before, .upi-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+.upi-divider span {
+  padding: 0 10px;
+  font: 700 9.5px 'DM Mono', monospace;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+.upi-vpa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.upi-vpa-form label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+.upi-input-group {
+  display: flex;
+  gap: 8px;
+}
+.upi-input-group input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.upi-input-group input:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px #e0f2fe;
+}
+
+/* Card Forms */
+.card-payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+.card-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.card-input-wrapper input, .form-group input, .gateway-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card-input-wrapper input:focus, .form-group input:focus, .gateway-select:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px #e0f2fe;
+}
+.card-brand-badge {
+  position: absolute;
+  right: 12px;
+  font: 800 10.5px 'DM Mono', monospace;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 4px;
+  padding: 2px 7px;
+  pointer-events: none;
+}
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.gateway-pay-btn {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 13.5px;
+  padding: 12px 18px;
+}
+
+/* Net Banking Grid */
+.popular-banks-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.bank-tile {
+  padding: 12px 10px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s var(--ease-spring);
+}
+.bank-tile:hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.1);
+}
+.bank-tile.selected {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+.bank-tile-badge {
+  font-size: 20px;
+}
+.bank-tile strong {
+  font-size: 12px;
+  color: #0f172a;
+}
+.bank-tile small {
+  font-size: 9.5px;
+  color: #64748b;
+}
+.all-banks-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.all-banks-section label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+.netbanking-summary-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.netbanking-summary-box span {
+  font-size: 12px;
+  color: #0f172a;
+}
+.netbanking-summary-box strong {
+  color: #0369a1;
+}
+.netbanking-summary-box small {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Bank 3D Secure / OTP Screen */
+.gateway-otp-view {
+  background: #ffffff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.08);
+}
+.bank-otp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.bank-shield-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+.bank-otp-header h4 {
+  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0369a1;
+}
+.bank-otp-header p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #64748b;
+}
+.bank-otp-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+.otp-summary-item span {
+  display: block;
+  font: 600 9.5px 'DM Mono', monospace;
+  color: #64748b;
+  text-transform: uppercase;
+}
+.otp-summary-item strong {
+  display: block;
+  font-size: 12.5px;
+  color: #0f172a;
+  margin-top: 2px;
+}
+.otp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.otp-form label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.otp-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.otp-code-input {
+  max-width: 180px;
+  padding: 10px 14px;
+  border: 2px solid #0284c7;
+  border-radius: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-align: center;
+  color: #0f172a;
+  outline: none;
+  box-shadow: 0 0 0 3px #e0f2fe;
+}
+.autofill-otp-btn {
+  padding: 8px 14px;
+  background: #f0f9ff;
+  border: 1px dashed #0284c7;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0284c7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.autofill-otp-btn:hover {
+  background: #e0f2fe;
+  border-color: #0369a1;
+  color: #0369a1;
+}
+.otp-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.otp-footer-note {
+  font-size: 10.5px;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+/* Gateway Processing View */
+.gateway-processing-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  gap: 14px;
+}
+.gateway-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3.5px solid #e0f2fe;
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+}
+.gateway-processing-view h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #0369a1;
+}
+.gateway-processing-view p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Gateway Footer */
+.gateway-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 10.5px;
+  color: #64748b;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gateway-footer-left {
+  display: flex;
+  gap: 12px;
+}
+.pci-badge, .rbi-badge {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Gateway Responsive Adjustments */
+@media (max-width: 680px) {
+  .gateway-body {
+    grid-template-columns: 1fr;
+  }
+  .gateway-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px 14px;
+  }
+  .gateway-nav-btn {
+    min-width: 130px;
+    padding: 8px 10px;
+  }
+  .gateway-nav-btn .nav-text small {
+    display: none;
+  }
+  .gateway-upi-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .popular-banks-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .otp-actions-row {
+    flex-direction: column;
+  }
+  .bank-otp-summary {
+    grid-template-columns: 1fr;
+  }
+}

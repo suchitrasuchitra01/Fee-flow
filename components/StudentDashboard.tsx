@@ -8,6 +8,7 @@ import { currency, feeStatus } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import FeeReceiptModal from "@/components/FeeReceiptModal";
+import PaymentGatewayModal, { PaymentMode } from "@/components/PaymentGatewayModal";
 
 type AppInfo = {
   id: string;
@@ -25,6 +26,10 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [activeApp, setActiveApp] = useState<AppInfo | null>(null);
+
+  // Unified Payment Gateway state (UPI, Debit Card, Credit Card, Net Banking)
+  const [showGatewayModal, setShowGatewayModal] = useState(false);
+  const [gatewayMode, setGatewayMode] = useState<PaymentMode>("upi");
 
   // Institution UPI & Payee settings
   const [vpa, setVpa] = useState("8688099587@ybl");
@@ -183,6 +188,38 @@ export default function StudentDashboard() {
     } finally {
       setSavingUpi(false);
     }
+  }
+
+  function openGatewayModal(mode: PaymentMode = "upi") {
+    setGatewayMode(mode);
+    setShowGatewayModal(true);
+  }
+
+  function handleGatewayPaymentSuccess(receipt: FeeReceipt, updatedStudent?: Student) {
+    if (updatedStudent) {
+      setStudent(updatedStudent);
+    } else {
+      setStudent((prev) =>
+        prev
+          ? {
+              ...prev,
+              paid_fee: prev.paid_fee + receipt.amount_paid,
+              due_fee: Math.max(0, prev.due_fee - receipt.amount_paid),
+            }
+          : null
+      );
+    }
+
+    setReceipts((prev) => {
+      const updated = [receipt, ...prev];
+      try {
+        localStorage.setItem(`feeflow_receipts_${receipt.student_id}`, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setSelectedReceiptId(receipt.id);
+    setShowReceiptModal(true);
   }
 
   function openPaymentConfirmation(appName = "UPI App / QR Scanner") {
@@ -462,8 +499,44 @@ export default function StudentDashboard() {
         <section className="pay-card animate-fade-up stagger-4">
           <div>
             <p className="eyebrow">PAY ONLINE</p>
-            <h2>Pay with UPI</h2>
-              <p>Scan using any UPI app or select your preferred app below for payment details & website links.</p>
+            <h2>Fee Payment Gateway</h2>
+            <p>Select your preferred payment method below: UPI, Debit Card, Credit Card, or Net Banking.</p>
+
+            {/* Payment Mode Selector Tabs */}
+            <div className="payment-modes-selector">
+              <button
+                type="button"
+                className="pay-mode-tab active"
+                onClick={() => openGatewayModal("upi")}
+                title="Pay via UPI or scan QR code"
+              >
+                <span>📱 UPI & QR</span>
+              </button>
+              <button
+                type="button"
+                className="pay-mode-tab"
+                onClick={() => openGatewayModal("debit")}
+                title="Pay via Debit Card"
+              >
+                <span>💳 Debit Card</span>
+              </button>
+              <button
+                type="button"
+                className="pay-mode-tab"
+                onClick={() => openGatewayModal("credit")}
+                title="Pay via Credit Card"
+              >
+                <span>💳 Credit Card</span>
+              </button>
+              <button
+                type="button"
+                className="pay-mode-tab"
+                onClick={() => openGatewayModal("netbanking")}
+                title="Pay via Net Banking"
+              >
+                <span>🏛️ Net Banking</span>
+              </button>
+            </div>
 
               {totalPayable > 0 ? (
                 <div className="upi-apps-section">
@@ -577,9 +650,24 @@ export default function StudentDashboard() {
                     ))}
                   </div>
 
+                  {/* SITS Multi-Option Gateway Launcher */}
+                  <div className="gateway-launcher-box">
+                    <button
+                      type="button"
+                      className="primary-button gateway-launch-main-btn"
+                      onClick={() => openGatewayModal("upi")}
+                    >
+                      <span>🔒 Pay Online via Gateway (UPI, Debit/Credit Card, Net Banking)</span>
+                      <span className="btn-arrow" aria-hidden="true">→</span>
+                    </button>
+                    <small className="gateway-launcher-sub">
+                      All options: Google Pay, PhonePe, Paytm, RuPay, Visa, MasterCard, Net Banking (SBI, HDFC, ICICI, etc.)
+                    </small>
+                  </div>
+
                   <button
                     type="button"
-                    className="primary-button"
+                    className="secondary-button open-any-upi-btn"
                     onClick={() => handleAppSelect({
                       id: "generic",
                       name: "Any UPI App",
@@ -588,6 +676,7 @@ export default function StudentDashboard() {
                       instructions: "Scan the QR code on your screen with any UPI-compatible app (GPay, PhonePe, Paytm, BHIM, CRED, Amazon Pay, or Mobile Banking).",
                       renderIcon: () => <UpiIcon />
                     })}
+                    style={{ width: "100%", marginTop: 10 }}
                   >
                     <UpiIcon />
                     <span>Open Any UPI App</span>
@@ -828,15 +917,17 @@ export default function StudentDashboard() {
             </button>
 
             <div className="modal-action-row">
-              <a
-                href={activeApp.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="modal-website-btn"
+              <button
+                type="button"
+                className="modal-website-btn modal-gateway-switch-btn"
+                onClick={() => {
+                  setActiveApp(null);
+                  openGatewayModal("upi");
+                }}
               >
-                <span>Visit {activeApp.name} Website</span>
-                <span aria-hidden="true">↗</span>
-              </a>
+                <span>🌐 View All Options (UPI, Debit/Credit Card, Net Banking)</span>
+                <span aria-hidden="true">→</span>
+              </button>
 
               <a
                 href={activeApp.uri}
@@ -967,6 +1058,19 @@ export default function StudentDashboard() {
           onClose={() => setShowReceiptModal(false)}
         />
       )}
+
+      {/* SITS Unified Multi-Option Payment Gateway Modal */}
+      <PaymentGatewayModal
+        isOpen={showGatewayModal}
+        onClose={() => setShowGatewayModal(false)}
+        student={student}
+        amount={hasValidAmount ? numericAmount : totalPayable}
+        initialMode={gatewayMode}
+        payeeUpi={vpa}
+        payeeName={payee}
+        genericUpiUri={genericUpiUri}
+        onPaymentSuccess={handleGatewayPaymentSuccess}
+      />
     </main>
   );
 }
