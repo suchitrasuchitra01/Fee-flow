@@ -187,16 +187,17 @@ button { cursor: pointer; }
   grid-template-columns: minmax(400px, 46%) 1fr;
 }
 .auth-intro {
-  background: linear-gradient(145deg, #0e372a 0%, #164c3b 50%, #1a5743 100%);
+  background: linear-gradient(145deg, #f0fdf4 0%, #f8fafc 45%, #ecfdf5 100%);
   background-size: 200% 200%;
   animation: emeraldGradientWave 16s ease infinite;
-  color: white;
+  color: var(--ink);
   padding: 48px clamp(35px, 6vw, 90px);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   position: relative;
   overflow: hidden;
+  border-right: 1px solid #e2e8f0;
 }
 .auth-intro::before {
   content: '';
@@ -206,7 +207,7 @@ button { cursor: pointer; }
   width: 420px;
   height: 420px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(199, 237, 119, 0.14) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(167, 243, 208, 0.45) 0%, transparent 70%);
   filter: blur(45px);
   pointer-events: none;
   animation: orbFloat1 12s ease-in-out infinite;
@@ -219,12 +220,12 @@ button { cursor: pointer; }
   width: 360px;
   height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.16) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(191, 219, 254, 0.4) 0%, transparent 70%);
   filter: blur(50px);
   pointer-events: none;
   animation: orbFloat2 14s ease-in-out infinite;
 }
-.auth-intro .portal-name { border-color: #7e9e90; }
+.auth-intro .portal-name { border-color: #cbd5e1; }
 
 /* Login Page Brand Enlargement & Alignment */
 .auth-brand-wrap {
@@ -247,15 +248,15 @@ button { cursor: pointer; }
   width: clamp(240px, 22vw, 310px);
   max-width: 100%;
   height: auto;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.22));
+  filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.08));
   transition: transform 0.3s var(--ease-spring);
 }
 .auth-intro .brand.login-brand:hover .sits-logo {
   transform: scale(1.03);
 }
 .auth-intro .brand.login-brand .portal-name {
-  border-left: 2.5px solid rgba(255, 255, 255, 0.45);
-  color: #ffffff;
+  border-left: 2.5px solid #cbd5e1;
+  color: #0e4c38;
   font-size: clamp(28px, 2.4vw, 34px);
   font-weight: 800;
   letter-spacing: -0.6px;
@@ -298,14 +299,23 @@ button { cursor: pointer; }
   font: 500 10px 'DM Mono', monospace;
   letter-spacing: 1.3px;
 }
-.auth-intro .eyebrow { color: #c7ed77; }
+.auth-intro .eyebrow {
+  color: #065f46;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+  font-weight: 700;
+}
 .intro-content h1 {
   margin: 0;
   font: 700 clamp(48px, 6vw, 76px)/0.98 'Playfair Display', Georgia, serif;
   letter-spacing: -2px;
+  color: #0f172a;
 }
 .intro-content p:not(.eyebrow) {
-  color: #c5d6cd;
+  color: #475569;
   font-size: 17px;
   line-height: 1.7;
   max-width: 390px;
@@ -322,28 +332,30 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 7px 13px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #bbf7d0;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
-  color: #d1fae5;
+  font-weight: 700;
+  color: #065f46;
   backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
   transition: all 0.25s var(--ease-spring);
   animation: badgeFloat 4s ease-in-out infinite alternate;
 }
 .auth-chip:nth-child(2) { animation-delay: 1.2s; }
 .auth-chip:nth-child(3) { animation-delay: 2.4s; }
 .auth-chip:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(199, 237, 119, 0.5);
-  color: #ffffff;
+  background: #ffffff;
+  border-color: #34d399;
+  color: #047857;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.16);
   transform: translateY(-3px) scale(1.04);
 }
 
 .auth-footnote {
-  color: #a5beb0;
+  color: #64748b;
   font-size: 12px;
   position: relative;
   z-index: 2;
@@ -1871,8 +1883,10 @@ td small { margin-top: 3px; color: #64748b; }
   flex-wrap: wrap;
   gap: 12px;
   padding: 14px 20px;
-  background: #0f172a;
-  color: white;
+  background: #f8fafc;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-bottom: 0;
   border-radius: 14px 14px 0 0;
 }
 .receipt-modal-actions-left {
@@ -1887,20 +1901,22 @@ td small { margin-top: 3px; color: #64748b; }
 }
 .receipt-picker-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--muted);
+  font-weight: 600;
 }
 .receipt-select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #334155;
-  background: #1e293b;
-  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--ink);
   font-size: 12px;
   outline: none;
 }
 .receipt-status-pill {
-  background: #064e3b;
-  color: #6ee7b7;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 11px;
@@ -1925,23 +1941,25 @@ td small { margin-top: 3px; color: #64748b; }
   gap: 6px;
 }
 .receipt-action-btn.secondary {
-  background: #334155;
-  color: #f1f5f9;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
 }
 .receipt-action-btn.secondary:hover {
-  background: #475569;
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 .receipt-action-btn.primary {
-  background: #10b981;
+  background: #15654b;
   color: white;
 }
 .receipt-action-btn.primary:hover {
-  background: #059669;
+  background: #0e4c38;
 }
 .receipt-modal-close {
-  background: #334155;
-  color: #94a3b8;
-  border: 0;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -1952,8 +1970,9 @@ td small { margin-top: 3px; color: #64748b; }
   transition: all 0.2s ease;
 }
 .receipt-modal-close:hover {
-  background: #dc2626;
-  color: white;
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
 /* Official Printable Receipt Card */
