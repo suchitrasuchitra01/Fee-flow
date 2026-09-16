@@ -19,6 +19,6 @@ export async function POST(request: NextRequest) {
     if (!summary) throw new Error("No Gemini response");
     return NextResponse.json({ summary });
   } catch {
-    return NextResponse.json({ summary: `Your current outstanding balance is ₹${due.toLocaleString("en-IN")}. Use the QR code below to make a payment.` });
+    return NextResponse.json({ summary: `Your current outstanding balance is ₹${due.toLocaleString("en-IN")}. Use the payment options above to make a payment.` });
   }
 }

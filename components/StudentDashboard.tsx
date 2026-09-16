@@ -459,25 +459,10 @@ export default function StudentDashboard() {
           </div>
         </section>
 
-        <section className="bottom-grid">
-          <article className="insight-card animate-fade-up stagger-4">
-            <p className="eyebrow">GEMINI INSIGHT</p>
-            <h2>Your fee summary</h2>
-            {summary ? (
-              <p className="animate-fade-in">{summary}</p>
-            ) : (
-              <div className="shimmer-box">
-                <div className="shimmer-line" />
-                <div className="shimmer-line" />
-                <div className="shimmer-line short" />
-              </div>
-            )}
-          </article>
-
-          <article className="pay-card animate-fade-up stagger-5">
-            <div>
-              <p className="eyebrow">PAY ONLINE</p>
-              <h2>Pay with UPI</h2>
+        <section className="pay-card animate-fade-up stagger-4">
+          <div>
+            <p className="eyebrow">PAY ONLINE</p>
+            <h2>Pay with UPI</h2>
               <p>Scan using any UPI app or select your preferred app below for payment details & website links.</p>
 
               {totalPayable > 0 ? (
@@ -750,7 +735,26 @@ export default function StudentDashboard() {
               <QRCodeSVG value={genericUpiUri} size={132} includeMargin />
               <small>{hasValidAmount ? `Scan to pay ${currency(numericAmount)}` : "Scan to pay"}</small>
             </div>
-          </article>
+        </section>
+
+        {/* Gemini AI Fee Summary (At the bottom of the page) */}
+        <section className="insight-card animate-fade-up stagger-5">
+          <div className="insight-header">
+            <span className="insight-sparkle-icon" aria-hidden="true">✨</span>
+            <div>
+              <p className="eyebrow" style={{ margin: 0 }}>GEMINI INSIGHT</p>
+              <h2 style={{ margin: "2px 0 0" }}>Your fee summary</h2>
+            </div>
+          </div>
+          {summary ? (
+            <p className="animate-fade-in" style={{ marginTop: 12 }}>{summary}</p>
+          ) : (
+            <div className="shimmer-box" style={{ marginTop: 12 }}>
+              <div className="shimmer-line" />
+              <div className="shimmer-line" />
+              <div className="shimmer-line short" />
+            </div>
+          )}
         </section>
       </div>
 

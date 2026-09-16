@@ -524,22 +524,41 @@ button { cursor: pointer; }
 .fee-item.warning strong, .warning-text { color: #b65821; }
 .fee-item.danger strong { color: var(--red); }
 
-.bottom-grid {
-  display: grid;
-  grid-template-columns: 0.83fr 1.17fr;
-  gap: 18px;
+.pay-card {
+  padding: 26px 28px;
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
   margin-top: 18px;
 }
+.pay-card h2, .insight-card h2 {
+  font: 700 21px 'Playfair Display', Georgia, serif;
+  margin: 0 0 13px;
+}
 .insight-card {
-  padding: 27px 28px;
+  padding: 24px 28px;
   background: #f0fdf4;
   border-color: #bbf7d0;
   position: relative;
   overflow: hidden;
+  margin-top: 18px;
 }
-.insight-card h2, .pay-card h2 {
-  font: 700 21px 'Playfair Display', Georgia, serif;
-  margin: 0 0 13px;
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.insight-sparkle-icon {
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  flex-shrink: 0;
 }
 .insight-card p:last-child, .pay-card p:not(.eyebrow) {
   font-size: 13px;
@@ -563,12 +582,6 @@ button { cursor: pointer; }
 }
 .shimmer-line.short { width: 60%; }
 
-.pay-card {
-  padding: 26px 28px;
-  display: flex;
-  justify-content: space-between;
-  gap: 25px;
-}
 .pay-card > div:first-child {
   flex: 1;
   min-width: 0;
