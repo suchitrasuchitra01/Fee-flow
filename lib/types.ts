@@ -25,6 +25,7 @@ export type FeeReceipt = {
   remaining_due: number;
   total_fee: number;
   payment_mode: string;
+  fee_type?: "tuition" | "fine" | "all";
   utr_number: string;
   payee_upi: string;
   payee_name: string;

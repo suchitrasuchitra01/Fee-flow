@@ -43,6 +43,7 @@ export default function StudentDashboard() {
 
   // Payment amount input state
   const [customAmount, setCustomAmount] = useState<string | null>(null);
+  const [feeCategory, setFeeCategory] = useState<"all" | "tuition" | "fine">("all");
 
   // Fee Receipt & Payment Confirmation state
   const [receipts, setReceipts] = useState<FeeReceipt[]>([]);
@@ -200,15 +201,30 @@ export default function StudentDashboard() {
     if (updatedStudent) {
       setStudent(updatedStudent);
     } else {
-      setStudent((prev) =>
-        prev
-          ? {
-              ...prev,
-              paid_fee: prev.paid_fee + receipt.amount_paid,
-              due_fee: Math.max(0, prev.due_fee - receipt.amount_paid),
-            }
-          : null
-      );
+      setStudent((prev) => {
+        if (!prev) return null;
+        if (feeCategory === "fine") {
+          return {
+            ...prev,
+            fine_fee: Math.max(0, prev.fine_fee - receipt.amount_paid),
+          };
+        } else if (feeCategory === "tuition") {
+          return {
+            ...prev,
+            paid_fee: prev.paid_fee + receipt.amount_paid,
+            due_fee: Math.max(0, prev.due_fee - receipt.amount_paid),
+          };
+        } else {
+          const paidToDue = Math.min(prev.due_fee, receipt.amount_paid);
+          const remForFine = Math.max(0, receipt.amount_paid - paidToDue);
+          return {
+            ...prev,
+            paid_fee: prev.paid_fee + paidToDue,
+            due_fee: Math.max(0, prev.due_fee - paidToDue),
+            fine_fee: Math.max(0, prev.fine_fee - remForFine),
+          };
+        }
+      });
     }
 
     setReceipts((prev) => {
@@ -233,14 +249,16 @@ export default function StudentDashboard() {
         body: JSON.stringify({
           student_id: student.student_id,
           total_fee: 100000,
-          paid_fee: 55000,
-          due_fee: 45000,
-          fine_fee: 0,
+          paid_fee: 57000,
+          due_fee: 43000,
+          fine_fee: 1500,
         }),
       });
       const data = await res.json();
       if (res.ok && data.student) {
         setStudent(data.student);
+        setFeeCategory("all");
+        setCustomAmount(null);
         if (clearReceipts) {
           setReceipts([]);
           try {
@@ -403,10 +421,27 @@ export default function StudentDashboard() {
   }
 
   const totalPayable = student.due_fee + student.fine_fee;
-  const currentAmountStr = customAmount !== null ? customAmount : String(totalPayable);
+  const targetCategoryAmount =
+    feeCategory === "fine"
+      ? student.fine_fee
+      : feeCategory === "tuition"
+      ? student.due_fee
+      : totalPayable;
+  const currentAmountStr = customAmount !== null ? customAmount : String(targetCategoryAmount);
   const numericAmount = parseFloat(currentAmountStr);
   const hasValidAmount = !isNaN(numericAmount) && numericAmount > 0;
-  const note = `Fee payment ${student.student_id}`;
+  const note = `${feeCategory === "fine" ? "Late Fine" : feeCategory === "tuition" ? "Tuition Fee" : "Fee payment"} ${student.student_id}`;
+
+  function handleSelectFeeCategory(cat: "all" | "tuition" | "fine") {
+    setFeeCategory(cat);
+    if (cat === "fine") {
+      setCustomAmount(student ? String(student.fine_fee) : "0");
+    } else if (cat === "tuition") {
+      setCustomAmount(student ? String(student.due_fee) : "0");
+    } else {
+      setCustomAmount(null);
+    }
+  }
 
   const amParam = hasValidAmount ? `&am=${numericAmount}` : "";
   const baseUpiParams = `pa=${vpa}&pn=${encodeURIComponent(payee)}${amParam}&cu=INR&tn=${encodeURIComponent(note)}`;
@@ -516,21 +551,53 @@ export default function StudentDashboard() {
               <span>Email <b>{student.email}</b></span>
             </div>
           </div>
+
+          {/* Academic Tuition Fee Due Card */}
           <div className={`balance-card animate-fade-up stagger-2 ${student.due_fee > 0 ? "has-due" : "settled"}`}>
-            <div className="card-label">CURRENT BALANCE</div>
-            <span className="balance-amount">{currency(totalPayable)}</span>
-            <span className="balance-caption">{student.due_fee > 0 ? "Amount payable" : "All payments completed"}</span>
+            <div className="card-label">TUITION FEE DUE</div>
+            <span className="balance-amount">{currency(student.due_fee)}</span>
+            <span className="balance-caption">{student.due_fee > 0 ? "Academic fee balance" : "Tuition fully settled"}</span>
             <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
-              <span className="status-pill">{feeStatus(totalPayable)}</span>
-              {student.due_fee === 0 && (
+              <span className={`status-pill ${student.due_fee > 0 ? "warning" : "settled"}`}>
+                {student.due_fee > 0 ? "Due" : "Settled ✓"}
+              </span>
+              {student.due_fee === 0 && student.fine_fee === 0 && (
                 <button
                   type="button"
                   className="reset-balance-btn"
                   onClick={() => handleResetFees(false)}
                   disabled={resettingFees}
-                  title="Reset due fee back to ₹45,000 for testing"
+                  title="Reset fees back for testing"
                 >
-                  {resettingFees ? "Resetting..." : "🔄 Reset Due Fees"}
+                  {resettingFees ? "Resetting..." : "🔄 Reset Fees"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Separate Late Fine Fee Card */}
+          <div className={`fine-balance-card animate-fade-up stagger-3 ${student.fine_fee > 0 ? "has-fine" : "settled"}`}>
+            <div className="card-label">LATE FINE FEE</div>
+            <span className="fine-balance-amount">{currency(student.fine_fee)}</span>
+            <span className="fine-balance-caption">
+              {student.fine_fee > 0 ? "Overdue penalty" : "No fine active"}
+            </span>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "6px", flexWrap: "wrap" }}>
+              <span className={`status-pill ${student.fine_fee > 0 ? "danger" : "settled"}`}>
+                {student.fine_fee > 0 ? "Fine Active ⚠️" : "Cleared ✓"}
+              </span>
+              {student.fine_fee > 0 && (
+                <button
+                  type="button"
+                  className="pay-fine-quick-btn"
+                  onClick={() => {
+                    handleSelectFeeCategory("fine");
+                    const payElem = document.querySelector(".pay-card");
+                    if (payElem) payElem.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  title="Pay this fine fee separately"
+                >
+                  Pay Fine Only
                 </button>
               )}
             </div>
@@ -597,23 +664,71 @@ export default function StudentDashboard() {
 
               {totalPayable > 0 ? (
                 <div className="upi-apps-section">
+                  {/* Fee Category Selector: Separate Fine Fees from Tuition Fees */}
+                  {(student.due_fee > 0 || student.fine_fee > 0) && (
+                    <div className="fee-category-selector-box animate-fade-in">
+                      <span className="fee-category-title">Choose Fee to Pay:</span>
+                      <div className="fee-category-pill-group">
+                        <button
+                          type="button"
+                          className={`fee-category-pill ${feeCategory === "all" ? "active" : ""}`}
+                          onClick={() => handleSelectFeeCategory("all")}
+                        >
+                          <span className="cat-pill-icon">📋</span>
+                          <div className="cat-pill-info">
+                            <strong>Both (Tuition + Fine)</strong>
+                            <small>{currency(student.due_fee + student.fine_fee)}</small>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`fee-category-pill ${feeCategory === "tuition" ? "active" : ""}`}
+                          onClick={() => handleSelectFeeCategory("tuition")}
+                          disabled={student.due_fee <= 0}
+                        >
+                          <span className="cat-pill-icon">🎓</span>
+                          <div className="cat-pill-info">
+                            <strong>Tuition Fee Only</strong>
+                            <small>{currency(student.due_fee)}</small>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`fee-category-pill fine-pill ${feeCategory === "fine" ? "active" : ""}`}
+                          onClick={() => handleSelectFeeCategory("fine")}
+                          disabled={student.fine_fee <= 0}
+                        >
+                          <span className="cat-pill-icon">⚠️</span>
+                          <div className="cat-pill-info">
+                            <strong>Late Fine Only</strong>
+                            <small>{currency(student.fine_fee)}</small>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Enter Amount to Pay Option */}
                   <div className="payment-amount-box">
                     <div className="payment-amount-header">
                       <div className="payment-amount-meta">
-                        <label htmlFor="student-pay-amount" className="payment-amount-label">Enter Amount to Pay (₹)</label>
-                        {customAmount !== null && customAmount !== String(totalPayable) && (
+                        <label htmlFor="student-pay-amount" className="payment-amount-label">
+                          Amount to Pay ({feeCategory === "fine" ? "Late Fine Only" : feeCategory === "tuition" ? "Tuition Fee Only" : "Total Fees"}) (₹)
+                        </label>
+                        {customAmount !== null && customAmount !== String(targetCategoryAmount) && (
                           <span className="payment-amount-badge">Custom Amount</span>
                         )}
                       </div>
-                      {customAmount !== null && customAmount !== String(totalPayable) && (
+                      {customAmount !== null && customAmount !== String(targetCategoryAmount) && (
                         <button
                           type="button"
                           className="reset-amount-link"
                           onClick={() => setCustomAmount(null)}
-                          title="Reset to full balance due"
+                          title="Reset to category balance"
                         >
-                          ↩ Reset to Full Due ({currency(totalPayable)})
+                          ↩ Reset to Due ({currency(targetCategoryAmount)})
                         </button>
                       )}
                     </div>
@@ -635,11 +750,24 @@ export default function StudentDashboard() {
                     <div className="payment-amount-presets">
                       <button
                         type="button"
-                        className={`preset-chip ${currentAmountStr === String(totalPayable) ? "active" : ""}`}
-                        onClick={() => setCustomAmount(String(totalPayable))}
+                        className={`preset-chip ${currentAmountStr === String(targetCategoryAmount) ? "active" : ""}`}
+                        onClick={() => setCustomAmount(String(targetCategoryAmount))}
                       >
-                        Full Due ({currency(totalPayable)})
+                        {feeCategory === "fine" ? "Full Fine" : feeCategory === "tuition" ? "Full Tuition" : "Full Due"} ({currency(targetCategoryAmount)})
                       </button>
+
+                      {student.fine_fee > 0 && feeCategory !== "fine" && (
+                        <button
+                          type="button"
+                          className={`preset-chip fine-preset ${currentAmountStr === String(student.fine_fee) ? "active" : ""}`}
+                          onClick={() => {
+                            setFeeCategory("fine");
+                            setCustomAmount(String(student.fine_fee));
+                          }}
+                        >
+                          ⚠️ Late Fine ({currency(student.fine_fee)})
+                        </button>
+                      )}
                       {totalPayable > 10000 && (
                         <button
                           type="button"
@@ -1121,8 +1249,9 @@ export default function StudentDashboard() {
         isOpen={showGatewayModal}
         onClose={() => setShowGatewayModal(false)}
         student={student}
-        amount={hasValidAmount ? numericAmount : totalPayable}
+        amount={hasValidAmount ? numericAmount : targetCategoryAmount}
         initialMode={gatewayMode}
+        feeType={feeCategory}
         payeeUpi={vpa}
         payeeName={payee}
         genericUpiUri={genericUpiUri}

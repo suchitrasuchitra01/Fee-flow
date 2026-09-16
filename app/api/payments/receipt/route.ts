@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       student_id,
       amount_paid,
       payment_mode = "UPI",
+      fee_type = "all", // "tuition" | "fine" | "all"
       utr_number = "",
       payee_upi = "8688099587@ybl",
       payee_name = "SITS",
@@ -56,15 +57,38 @@ export async function POST(request: Request) {
         totalFee = Number(student.total_fee || 0);
         previousDue = Number(student.due_fee || 0);
         const currentPaid = Number(student.paid_fee || 0);
+        const currentFine = Number(student.fine_fee || 0);
 
-        const newPaid = currentPaid + amount;
-        remainingDue = Math.max(0, previousDue - amount);
+        let newPaid = currentPaid;
+        let newDue = previousDue;
+        let newFine = currentFine;
+
+        if (fee_type === "fine") {
+          // Dedicated Late Fine payment
+          newFine = Math.max(0, currentFine - amount);
+          remainingDue = previousDue; // tuition due remains intact
+        } else if (fee_type === "tuition") {
+          // Dedicated Tuition Fee payment
+          const paidToDue = Math.min(previousDue, amount);
+          newDue = Math.max(0, previousDue - paidToDue);
+          newPaid = currentPaid + amount;
+          remainingDue = newDue;
+        } else {
+          // Consolidated payment: Pay tuition due first, then remainder covers fine
+          const paidToDue = Math.min(previousDue, amount);
+          newDue = Math.max(0, previousDue - paidToDue);
+          newPaid = currentPaid + paidToDue;
+          const excessToFine = Math.max(0, amount - paidToDue);
+          newFine = Math.max(0, currentFine - excessToFine);
+          remainingDue = newDue + newFine;
+        }
 
         const { data: updated, error: updateErr } = await service
           .from("students")
           .update({
             paid_fee: newPaid,
-            due_fee: remainingDue,
+            due_fee: newDue,
+            fine_fee: newFine,
           })
           .eq("id", student.id)
           .select()
@@ -87,7 +111,8 @@ export async function POST(request: Request) {
       previous_due: previousDue,
       remaining_due: remainingDue,
       total_fee: updatedStudent?.total_fee || totalFee,
-      payment_mode,
+      payment_mode: `${payment_mode}${fee_type === "fine" ? " (Late Fine)" : fee_type === "tuition" ? " (Tuition)" : ""}`,
+      fee_type: fee_type as "tuition" | "fine" | "all",
       utr_number: cleanUtr,
       payee_upi,
       payee_name,

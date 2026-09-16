@@ -14,6 +14,7 @@ interface PaymentGatewayModalProps {
   student: Student;
   amount: number;
   initialMode?: PaymentMode;
+  feeType?: "tuition" | "fine" | "all";
   payeeUpi: string;
   payeeName: string;
   genericUpiUri: string;
@@ -89,6 +90,7 @@ export default function PaymentGatewayModal({
   student,
   amount,
   initialMode = "upi",
+  feeType = "all",
   payeeUpi,
   payeeName,
   genericUpiUri,
@@ -206,6 +208,7 @@ export default function PaymentGatewayModal({
           student_id: student.student_id,
           amount_paid: amount,
           payment_mode: currentPaymentModeLabel,
+          fee_type: feeType,
           utr_number: generatedUtr,
           payee_upi: payeeUpi,
           payee_name: payeeName,
@@ -435,6 +438,12 @@ export default function PaymentGatewayModal({
                     <strong>{currentPaymentModeLabel}</strong>
                   </div>
                   <div className="otp-summary-item">
+                    <span>Fee Category:</span>
+                    <strong style={{ color: feeType === "fine" ? "#dc2626" : "#0369a1" }}>
+                      {feeType === "fine" ? "Late Fine Fee" : feeType === "tuition" ? "Tuition Fee" : "All Fees & Fine"}
+                    </strong>
+                  </div>
+                  <div className="otp-summary-item">
                     <span>Amount:</span>
                     <strong style={{ color: "#0284c7" }}>₹{amount.toLocaleString("en-IN")}</strong>
                   </div>
@@ -529,6 +538,12 @@ export default function PaymentGatewayModal({
                   <div className="otp-summary-item">
                     <span>Authorized Mode:</span>
                     <strong>{currentPaymentModeLabel}</strong>
+                  </div>
+                  <div className="otp-summary-item">
+                    <span>Fee Category:</span>
+                    <strong style={{ color: feeType === "fine" ? "#dc2626" : "#0369a1" }}>
+                      {feeType === "fine" ? "Late Fine Fee" : feeType === "tuition" ? "Tuition Fee" : "All Fees & Fine"}
+                    </strong>
                   </div>
                   <div className="otp-summary-item">
                     <span>Amount to Debit:</span>

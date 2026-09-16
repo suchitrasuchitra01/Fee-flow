@@ -612,18 +612,18 @@ button { cursor: pointer; }
 /* Cards & Layout */
 .student-overview {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 18px;
   margin: 37px 0 18px;
 }
-.profile-card, .balance-card, .fee-card, .insight-card, .pay-card, .metric, .student-form, .records-card {
+.profile-card, .balance-card, .fine-balance-card, .fee-card, .insight-card, .pay-card, .metric, .student-form, .records-card {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: white;
   box-shadow: var(--shadow);
   transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.25s var(--ease-out);
 }
-.profile-card:hover, .balance-card:hover, .fee-card:hover, .insight-card:hover, .pay-card:hover, .student-form:hover, .records-card:hover {
+.profile-card:hover, .balance-card:hover, .fine-balance-card:hover, .fee-card:hover, .insight-card:hover, .pay-card:hover, .student-form:hover, .records-card:hover {
   box-shadow: var(--shadow-hover);
   border-color: #cbd5e1;
   transform: translateY(-2px);
@@ -3184,3 +3184,159 @@ td small { margin-top: 3px; color: #64748b; }
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Separated Fine Fees & Category Selectors
+   ========================================================================== */
+
+/* Fine Balance Card in Overview */
+.fine-balance-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+}
+.fine-balance-card.has-fine {
+  border-color: #fecaca;
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.09);
+}
+.fine-balance-card.has-fine .card-label {
+  color: #dc2626;
+}
+.fine-balance-amount {
+  font: 800 clamp(24px, 2.6vw, 32px) 'Outfit', sans-serif;
+  color: #0f172a;
+  margin: 6px 0 2px;
+}
+.fine-balance-card.has-fine .fine-balance-amount {
+  color: #dc2626;
+}
+.fine-balance-caption {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.pay-fine-quick-btn {
+  padding: 4px 10px;
+  background: #fef2f2;
+  border: 1.5px dashed #ef4444;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pay-fine-quick-btn:hover {
+  background: #fee2e2;
+  border-color: #b91c1c;
+  color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* Fee Category Selector Box in Payment Section */
+.fee-category-selector-box {
+  background: #f8fafc;
+  border: 1.5px solid #e0f2fe;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+.fee-category-title {
+  display: block;
+  font: 700 11px 'DM Mono', monospace;
+  text-transform: uppercase;
+  color: #0369a1;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+.fee-category-pill-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.fee-category-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.22s var(--ease-spring);
+}
+.fee-category-pill:hover:not(:disabled) {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-1px);
+}
+.fee-category-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+.fee-category-pill.active {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  box-shadow: 0 0 0 3px #bae6fd, 0 4px 12px rgba(2, 132, 199, 0.12);
+}
+.fee-category-pill.fine-pill.active {
+  border-color: #ef4444;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px #fecaca, 0 4px 12px rgba(239, 68, 68, 0.12);
+}
+.cat-pill-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.cat-pill-info {
+  display: flex;
+  flex-direction: column;
+}
+.cat-pill-info strong {
+  font-size: 13px;
+  color: #0f172a;
+}
+.fee-category-pill.active .cat-pill-info strong {
+  color: #0369a1;
+}
+.fee-category-pill.fine-pill.active .cat-pill-info strong {
+  color: #dc2626;
+}
+.cat-pill-info small {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 1px;
+}
+.fee-category-pill.active .cat-pill-info small {
+  color: #0284c7;
+}
+.fee-category-pill.fine-pill.active .cat-pill-info small {
+  color: #ef4444;
+}
+
+/* Preset chip for fine */
+.preset-chip.fine-preset {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+.preset-chip.fine-preset:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+.preset-chip.fine-preset.active {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
