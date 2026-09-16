@@ -245,30 +245,51 @@ button { cursor: pointer; }
   justify-content: center;
   gap: 8px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   min-height: 46px;
-  padding: 0 19px;
+  padding: 0 20px;
   margin-top: 25px;
   background: var(--green);
   color: #fff;
   text-decoration: none;
   font-weight: 700;
   font-size: 13px;
-  transition: background-color 0.2s ease, transform 0.18s var(--ease-out), box-shadow 0.2s ease;
+  letter-spacing: 0.2px;
+  transition: background-color 0.22s var(--ease-out), transform 0.2s var(--ease-spring), box-shadow 0.22s var(--ease-out);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 14px rgba(21, 101, 75, 0.25);
+  cursor: pointer;
+}
+.primary-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
 }
 .primary-button:hover:not(:disabled) {
   background: var(--green-dark);
-  transform: translateY(-1.5px);
-  box-shadow: 0 8px 18px rgba(21, 101, 75, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(21, 101, 75, 0.35);
+}
+.primary-button:hover:not(:disabled)::after {
+  left: 150%;
 }
 .primary-button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(21, 101, 75, 0.2);
 }
 .primary-button:disabled {
   opacity: 0.65;
-  cursor: wait;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .login-card .primary-button { width: 100%; }
 .help-text {
@@ -576,37 +597,52 @@ button { cursor: pointer; }
 .upi-app-btn {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 12px;
-  border-radius: 9px;
-  border: 1px solid #dbe4de;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
   background: #ffffff;
   color: var(--ink);
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
-  transition: all 0.2s var(--ease-out);
-  box-shadow: 0 2px 6px rgba(24, 46, 35, 0.03);
+  transition: all 0.22s var(--ease-spring);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  position: relative;
+}
+.upi-app-btn svg, .upi-app-btn span:first-child {
+  transition: transform 0.22s var(--ease-spring);
 }
 .upi-app-btn:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 14px rgba(24, 46, 35, 0.08);
+  transform: translateY(-2.5px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+.upi-app-btn:hover svg, .upi-app-btn:hover span:first-child {
+  transform: scale(1.15);
+}
+.upi-app-btn:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 .upi-app-btn.gpay-btn:hover {
   border-color: #4285f4;
   background: #f8fbff;
+  box-shadow: 0 8px 18px rgba(66, 133, 244, 0.15);
 }
 .upi-app-btn.phonepe-btn:hover {
   border-color: #5f259f;
   background: #faf6ff;
+  box-shadow: 0 8px 18px rgba(95, 37, 159, 0.15);
 }
 .upi-app-btn.paytm-btn:hover {
   border-color: #00b9f5;
   background: #f4fcff;
+  box-shadow: 0 8px 18px rgba(0, 185, 245, 0.15);
 }
 .upi-app-btn.bhim-btn:hover {
   border-color: #00884d;
   background: #f4faf6;
+  box-shadow: 0 8px 18px rgba(0, 136, 77, 0.15);
 }
 .upi-vpa-box {
   display: flex;
@@ -619,6 +655,10 @@ button { cursor: pointer; }
   padding: 8px 12px;
   margin-top: 10px;
   font-size: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.upi-vpa-box:hover {
+  border-color: #cbd5e1;
 }
 .upi-vpa-box code {
   font-family: 'DM Mono', monospace;
@@ -640,16 +680,20 @@ button { cursor: pointer; }
   font-weight: 700;
   color: var(--green);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--ease-spring);
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 .edit-btn:hover {
   background: #f0fdf4;
   border-color: var(--green);
   color: #0e4c38;
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 10px rgba(21, 101, 75, 0.15);
+}
+.edit-btn:active {
+  transform: scale(0.95);
 }
 .copy-btn {
   background: white;
@@ -660,7 +704,7 @@ button { cursor: pointer; }
   font-weight: 700;
   color: var(--green);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--ease-spring);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -668,7 +712,11 @@ button { cursor: pointer; }
 .copy-btn:hover {
   background: #f0fdf4;
   border-color: var(--green);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 10px rgba(21, 101, 75, 0.15);
+}
+.copy-btn:active {
+  transform: scale(0.95);
 }
 .upi-edit-panel {
   background: #ffffff;
@@ -862,20 +910,25 @@ button { cursor: pointer; }
   top: 18px;
   right: 18px;
   background: #f1f5f9;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 50%;
   width: 32px;
   height: 32px;
   display: grid;
   place-items: center;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.22s var(--ease-spring);
 }
 .modal-close-btn:hover {
-  background: #e2e8f0;
-  color: var(--ink);
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+  transform: rotate(90deg) scale(1.1);
+}
+.modal-close-btn:active {
+  transform: rotate(90deg) scale(0.92);
 }
 .modal-header {
   display: flex;
@@ -932,19 +985,26 @@ button { cursor: pointer; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid #cbd8d0;
-  border-radius: 9px;
-  padding: 11px 16px;
-  background: white;
-  color: var(--green);
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: #ffffff;
+  color: var(--ink);
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: all 0.22s var(--ease-spring);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 .modal-website-btn:hover {
-  background: #eef7ee;
-  border-color: var(--green);
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: var(--green);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+.modal-website-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* Fullscreen & Inline Loaders */
@@ -1111,21 +1171,29 @@ td small { margin-top: 3px; color: #64748b; }
   border-radius: 8px;
   background: white;
   color: var(--green);
-  padding: 9px 13px;
+  padding: 9px 15px;
   font-size: 12px;
   font-weight: 700;
-  transition: all 0.2s var(--ease-out);
+  transition: all 0.22s var(--ease-spring);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .secondary-button:hover, .table-button:hover {
   background: #f0fdf4;
   border-color: var(--green);
-  transform: translateY(-1px);
+  color: #0e4c38;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(21, 101, 75, 0.14);
 }
 .secondary-button:active, .table-button:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 1px 2px rgba(21, 101, 75, 0.05);
 }
 .secondary-button { margin-top: 17px; }
-.table-button { padding: 6px 11px; }
+.table-button { padding: 6px 12px; }
 
 .import-box {
   display: grid;
@@ -1142,22 +1210,24 @@ td small { margin-top: 3px; color: #64748b; }
   align-items: center;
   justify-content: center;
   width: max-content;
-  border: 1px solid #cbd8d0;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 9px 13px;
+  padding: 9px 15px;
   color: var(--green);
   font-weight: 700;
   cursor: pointer;
   background: white;
-  transition: all 0.2s var(--ease-out);
+  transition: all 0.22s var(--ease-spring);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .file-button:hover {
-  background: #f2f7f4;
+  background: #f0fdf4;
   border-color: var(--green);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(21, 101, 75, 0.14);
 }
 .file-button:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.96);
 }
 .file-button input { display: none; }
 
