@@ -248,24 +248,24 @@ Status: PAID & VERIFIED
               {/* Official Digital Stamp Seal */}
               <div className="official-stamp-seal">
                 <svg className="stamp-svg" viewBox="0 0 200 200" width="120" height="120" aria-label="Official SITS Paid Seal">
-                  <circle cx="100" cy="100" r="92" fill="none" stroke="#15654b" strokeWidth="3.5" strokeDasharray="6,3" />
-                  <circle cx="100" cy="100" r="82" fill="rgba(236, 253, 245, 0.6)" stroke="#15654b" strokeWidth="2" />
+                  <circle cx="100" cy="100" r="92" fill="none" stroke="#0284c7" strokeWidth="3.5" strokeDasharray="6,3" />
+                  <circle cx="100" cy="100" r="82" fill="rgba(240, 249, 255, 0.7)" stroke="#0284c7" strokeWidth="2" />
                   <path id="circleTextPathTop" fill="none" d="M 30,100 A 70,70 0 0,1 170,100" />
-                  <text fill="#0e4c38" fontSize="11" fontWeight="800" letterSpacing="2">
+                  <text fill="#0369a1" fontSize="11" fontWeight="800" letterSpacing="2">
                     <textPath href="#circleTextPathTop" startOffset="50%" textAnchor="middle">
                       SIDDHARTHA SITS
                     </textPath>
                   </text>
                   <g transform="translate(100, 96)">
-                    <rect x="-65" y="-12" width="130" height="24" rx="4" fill="#15654b" />
+                    <rect x="-65" y="-12" width="130" height="24" rx="4" fill="#0284c7" />
                     <text x="0" y="5" fill="#ffffff" fontSize="12" fontWeight="900" textAnchor="middle" letterSpacing="1.5">
                       ✓ PAID
                     </text>
                   </g>
-                  <text x="100" y="132" fill="#0e4c38" fontSize="9.5" fontWeight="700" textAnchor="middle" letterSpacing="1">
+                  <text x="100" y="132" fill="#0369a1" fontSize="9.5" fontWeight="700" textAnchor="middle" letterSpacing="1">
                     ACCOUNTS BRANCH
                   </text>
-                  <text x="100" y="148" fill="#15654b" fontSize="8" fontWeight="600" textAnchor="middle">
+                  <text x="100" y="148" fill="#0284c7" fontSize="8" fontWeight="600" textAnchor="middle">
                     HYDERABAD
                   </text>
                 </svg>
