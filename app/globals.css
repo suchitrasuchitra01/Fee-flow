@@ -668,9 +668,123 @@ button { cursor: pointer; }
   transform: scale(1.05);
   box-shadow: 0 8px 20px rgba(24, 46, 35, 0.1);
 }
-.qr-wrap small {
-  font: 500 10px 'DM Mono', monospace;
+.pay-desktop-hint {
+  font-size: 11px;
   color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* UPI App Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 30, 22, 0.65);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+.modal-card {
+  background: white;
+  border-radius: 18px;
+  max-width: 440px;
+  width: 100%;
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(14, 30, 22, 0.25);
+  border: 1px solid var(--line);
+  position: relative;
+  animation: popIn 0.25s var(--ease-spring);
+}
+.modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #f0f4f1;
+  border: 0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.modal-close-btn:hover {
+  background: #e2ede5;
+  color: var(--ink);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.modal-amount-tag {
+  display: inline-block;
+  background: #eef7ee;
+  color: var(--green);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.modal-instructions {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+.modal-qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f7faf8;
+  border: 1px solid #dce5df;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.modal-qr-box small {
+  font: 500 11px 'DM Mono', monospace;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.modal-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 14px;
+}
+.modal-website-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #cbd8d0;
+  border-radius: 9px;
+  padding: 11px 16px;
+  background: white;
+  color: var(--green);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.modal-website-btn:hover {
+  background: #eef7ee;
+  border-color: var(--green);
 }
 
 /* Fullscreen & Inline Loaders */

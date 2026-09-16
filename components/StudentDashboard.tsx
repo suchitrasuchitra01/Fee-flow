@@ -8,12 +8,22 @@ import { currency, feeStatus } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 
+type AppInfo = {
+  id: string;
+  name: string;
+  website: string;
+  uri: string;
+  instructions: string;
+  renderIcon: () => JSX.Element;
+};
+
 export default function StudentDashboard() {
   const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [activeApp, setActiveApp] = useState<AppInfo | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -77,6 +87,49 @@ export default function StudentDashboard() {
   const phonePeUri = `phonepe://pay?${baseUpiParams}`;
   const paytmUri = `paytmmp://pay?${baseUpiParams}`;
   const bhimUri = `upi://pay?${baseUpiParams}`;
+
+  const apps: AppInfo[] = [
+    {
+      id: "gpay",
+      name: "Google Pay",
+      website: "https://pay.google.com",
+      uri: gpayUri,
+      instructions: "Open Google Pay on your phone, tap 'Scan any QR code' from the home screen, and scan the QR code to pay.",
+      renderIcon: () => <GPayIcon />
+    },
+    {
+      id: "phonepe",
+      name: "PhonePe",
+      website: "https://www.phonepe.com",
+      uri: phonePeUri,
+      instructions: "Open PhonePe on your phone, tap the QR scanner icon in the top right corner, and scan the QR code to pay.",
+      renderIcon: () => <PhonePeIcon />
+    },
+    {
+      id: "paytm",
+      name: "Paytm",
+      website: "https://paytm.com",
+      uri: paytmUri,
+      instructions: "Open Paytm on your phone, tap 'Scan & Pay', and scan the QR code to complete fee payment.",
+      renderIcon: () => <PaytmIcon />
+    },
+    {
+      id: "bhim",
+      name: "BHIM UPI",
+      website: "https://www.bhimupi.org.in",
+      uri: bhimUri,
+      instructions: "Open the BHIM app on your phone, tap 'Scan', verify payee SITS, and approve payment with your UPI PIN.",
+      renderIcon: () => <BhimIcon />
+    }
+  ];
+
+  function handleAppSelect(app: AppInfo) {
+    setActiveApp(app);
+    // On mobile devices, attempt to open the app directly
+    if (typeof window !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.location.href = app.uri;
+    }
+  }
 
   return (
     <main className="dashboard-shell">
@@ -150,34 +203,41 @@ export default function StudentDashboard() {
             <div>
               <p className="eyebrow">PAY ONLINE</p>
               <h2>Pay with UPI</h2>
-              <p>Scan using any UPI app or select your preferred app below to pay instantly.</p>
+              <p>Scan using any UPI app or select your preferred app below for payment details & website links.</p>
 
               {totalPayable > 0 ? (
                 <div className="upi-apps-section">
                   <div className="upi-section-title">Choose Payment App</div>
                   <div className="upi-apps-grid">
-                    <a className="upi-app-btn gpay-btn" href={gpayUri} title="Pay with Google Pay">
-                      <GPayIcon />
-                      <span>Google Pay</span>
-                    </a>
-                    <a className="upi-app-btn phonepe-btn" href={phonePeUri} title="Pay with PhonePe">
-                      <PhonePeIcon />
-                      <span>PhonePe</span>
-                    </a>
-                    <a className="upi-app-btn paytm-btn" href={paytmUri} title="Pay with Paytm">
-                      <PaytmIcon />
-                      <span>Paytm</span>
-                    </a>
-                    <a className="upi-app-btn bhim-btn" href={bhimUri} title="Pay with BHIM UPI">
-                      <BhimIcon />
-                      <span>BHIM UPI</span>
-                    </a>
+                    {apps.map((app) => (
+                      <button
+                        key={app.id}
+                        type="button"
+                        className={`upi-app-btn ${app.id}-btn`}
+                        onClick={() => handleAppSelect(app)}
+                        title={`Pay with ${app.name} or visit website`}
+                      >
+                        {app.renderIcon()}
+                        <span>{app.name}</span>
+                      </button>
+                    ))}
                   </div>
 
-                  <a className="primary-button" href={genericUpiUri}>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => handleAppSelect({
+                      id: "generic",
+                      name: "Any UPI App",
+                      website: "https://www.npci.org.in/what-we-do/upi/product-overview",
+                      uri: genericUpiUri,
+                      instructions: "Scan the QR code on your screen with any UPI-compatible app (GPay, PhonePe, Paytm, BHIM, CRED, Amazon Pay, or Mobile Banking).",
+                      renderIcon: () => <UpiIcon />
+                    })}
+                  >
                     <UpiIcon />
                     <span>Open Any UPI App</span>
-                  </a>
+                  </button>
 
                   <div className="upi-vpa-box">
                     <span>UPI ID: <code>{vpa}</code></span>
@@ -185,6 +245,10 @@ export default function StudentDashboard() {
                       {copied ? "Copied! ✓" : "Copy"}
                     </button>
                   </div>
+
+                  <p className="pay-desktop-hint">
+                    💡 <b>Using a PC or laptop?</b> Click any app above to view instructions & visit its official website, or scan the QR code with your phone.
+                  </p>
 
                   <div className="upi-accepted-tags">
                     <small>Accepted:</small>
@@ -210,6 +274,65 @@ export default function StudentDashboard() {
           </article>
         </section>
       </div>
+
+      {/* Interactive Modal for Desktop & Mobile UPI App Guidance & Official Websites */}
+      {activeApp && (
+        <div className="modal-overlay" onClick={() => setActiveApp(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={() => setActiveApp(null)}
+              aria-label="Close dialog"
+            >
+              ✕
+            </button>
+
+            <div className="modal-header">
+              {activeApp.renderIcon()}
+              <h3>Pay with {activeApp.name}</h3>
+            </div>
+
+            <div className="modal-amount-tag">
+              Payable: {currency(totalPayable)} • Payee: {payee}
+            </div>
+
+            <p className="modal-instructions">{activeApp.instructions}</p>
+
+            <div className="modal-qr-box">
+              <QRCodeSVG value={genericUpiUri} size={160} includeMargin />
+              <small>Scan with {activeApp.name} to pay {currency(totalPayable)}</small>
+            </div>
+
+            <div className="upi-vpa-box">
+              <span>UPI ID: <code>{vpa}</code></span>
+              <button type="button" className="copy-btn" onClick={copyUpiId}>
+                {copied ? "Copied! ✓" : "Copy"}
+              </button>
+            </div>
+
+            <div className="modal-action-row">
+              <a
+                href={activeApp.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="modal-website-btn"
+              >
+                <span>Visit {activeApp.name} Website</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+
+              <a
+                href={activeApp.uri}
+                className="primary-button"
+                style={{ marginTop: 0 }}
+              >
+                <span>Launch {activeApp.name} (Mobile)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
