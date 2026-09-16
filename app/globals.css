@@ -3848,3 +3848,393 @@ td small { margin-top: 3px; color: #64748b; }
   color: #0284c7;
 }
 
+/* ==========================================================================
+   'Make a Payment' Dual-Card Layout (SmartFee Style)
+   ========================================================================== */
+
+.smart-pay-container {
+  margin-bottom: 24px;
+}
+
+.make-payment-header {
+  margin-bottom: 20px;
+}
+
+.make-payment-header h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.make-payment-subtitle {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 2-Column Grid */
+.smart-pay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.08fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* Cards Base */
+.smart-pay-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 26px 28px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s ease;
+}
+
+.smart-pay-card:hover {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+}
+
+.card-block-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #f1f5f9;
+}
+
+/* Left Card: Payment Details Table */
+.payment-details-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.p-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.p-detail-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.p-detail-val {
+  color: #0f172a;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Fee Type Row & Pills */
+.fee-category-select-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.fee-type-btn-group {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.fee-type-pill {
+  flex: 1;
+  padding: 7px 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.fee-type-pill:hover:not(:disabled) {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.fee-type-pill.active {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  color: #0284c7;
+  box-shadow: 0 0 0 2px #bae6fd;
+}
+
+.fee-type-pill.fine-type-pill.active {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+  box-shadow: 0 0 0 2px #fecaca;
+}
+
+.fee-type-pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Amount Highlight Row */
+.amount-highlight-row {
+  padding: 16px 0 8px;
+  border-bottom: 0;
+  align-items: baseline;
+}
+
+.amount-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.p-detail-amount {
+  font-size: 26px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+/* Amount Controls (Presets & Custom) */
+.p-amount-controls {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.preset-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.preset-chip {
+  padding: 5px 11px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.preset-chip.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+}
+
+.custom-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.custom-input-wrap label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.custom-input-wrap input {
+  padding: 8px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.custom-input-wrap input:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px #e0f2fe;
+}
+
+/* Right Card: Select Payment Method */
+.payment-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.payment-method-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.payment-method-item:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.payment-method-item.selected {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.method-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.custom-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.custom-radio.checked {
+  border-color: #2563eb;
+}
+
+.custom-radio.checked .radio-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2563eb;
+}
+
+.method-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.method-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.upi-brand-logos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bank-glyph-icon {
+  font-size: 20px;
+  color: #0284c7;
+}
+
+/* Big Blue Pay Securely Button */
+.pay-securely-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+  transition: all 0.22s var(--ease-spring);
+}
+
+.pay-securely-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.38);
+}
+
+.pay-securely-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.lock-icon {
+  font-size: 15px;
+}
+
+/* 256-Bit SSL Encryption Pill */
+.payment-security-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.security-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Offline Claim Footer */
+.offline-claim-footer {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.offline-claim-link-btn {
+  background: transparent;
+  border: none;
+  color: #0284c7;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.offline-claim-link-btn:hover {
+  color: #0369a1;
+}
+
+/* Responsive adjustment */
+@media (max-width: 850px) {
+  .smart-pay-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+

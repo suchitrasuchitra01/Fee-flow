@@ -44,6 +44,20 @@ export default function StudentDashboard() {
   // Payment amount input state
   const [customAmount, setCustomAmount] = useState<string | null>(null);
   const [feeCategory, setFeeCategory] = useState<"all" | "tuition" | "fine">("all");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"razorpay" | "card" | "upi" | "netbanking">("razorpay");
+
+  function handlePaySecurely() {
+    if (selectedPaymentMethod === "card") {
+      openGatewayModal("debit");
+    } else if (selectedPaymentMethod === "upi") {
+      openGatewayModal("upi");
+    } else if (selectedPaymentMethod === "netbanking") {
+      openGatewayModal("netbanking");
+    } else {
+      // Razorpay All-in-One
+      openGatewayModal("upi");
+    }
+  }
 
   // Fee Receipt & Payment Confirmation state
   const [receipts, setReceipts] = useState<FeeReceipt[]>([]);
@@ -712,396 +726,229 @@ export default function StudentDashboard() {
                 <h3>Online Fee Payment Gateway</h3>
               </div>
             )}
-            <section className="pay-card animate-fade-up stagger-4">
-          <div>
-            <p className="eyebrow">PAY ONLINE</p>
-            <h2>Fee Payment Gateway</h2>
-            <p>Select your preferred payment method below: UPI, Debit Card, Credit Card, or Net Banking.</p>
+            <section className="smart-pay-container animate-fade-up stagger-4">
+              <div className="make-payment-header">
+                <h2>Make a Payment</h2>
+                <p className="make-payment-subtitle">Secure and convenient payment options</p>
+              </div>
 
-            {/* Payment Mode Selector Tabs */}
-            <div className="payment-modes-selector">
-              <button
-                type="button"
-                className="pay-mode-tab active"
-                onClick={() => openGatewayModal("upi")}
-                title="Pay via UPI or scan QR code"
-              >
-                <span>📱 UPI & QR</span>
-              </button>
-              <button
-                type="button"
-                className="pay-mode-tab"
-                onClick={() => openGatewayModal("debit")}
-                title="Pay via Debit Card"
-              >
-                <span>💳 Debit Card</span>
-              </button>
-              <button
-                type="button"
-                className="pay-mode-tab"
-                onClick={() => openGatewayModal("credit")}
-                title="Pay via Credit Card"
-              >
-                <span>💳 Credit Card</span>
-              </button>
-              <button
-                type="button"
-                className="pay-mode-tab"
-                onClick={() => openGatewayModal("netbanking")}
-                title="Pay via Net Banking"
-              >
-                <span>🏛️ Net Banking</span>
-              </button>
-            </div>
-
-              {totalPayable > 0 ? (
-                <div className="upi-apps-section">
-                  {/* Fee Category Selector: Separate Fine Fees from Tuition Fees */}
-                  {(student.due_fee > 0 || student.fine_fee > 0) && (
-                    <div className="fee-category-selector-box animate-fade-in">
-                      <span className="fee-category-title">Choose Fee to Pay:</span>
-                      <div className="fee-category-pill-group">
-                        <button
-                          type="button"
-                          className={`fee-category-pill ${feeCategory === "all" ? "active" : ""}`}
-                          onClick={() => handleSelectFeeCategory("all")}
-                        >
-                          <span className="cat-pill-icon">📋</span>
-                          <div className="cat-pill-info">
-                            <strong>Both (Tuition + Fine)</strong>
-                            <small>{currency(student.due_fee + student.fine_fee)}</small>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          className={`fee-category-pill ${feeCategory === "tuition" ? "active" : ""}`}
-                          onClick={() => handleSelectFeeCategory("tuition")}
-                          disabled={student.due_fee <= 0}
-                        >
-                          <span className="cat-pill-icon">🎓</span>
-                          <div className="cat-pill-info">
-                            <strong>Tuition Fee Only</strong>
-                            <small>{currency(student.due_fee)}</small>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          className={`fee-category-pill fine-pill ${feeCategory === "fine" ? "active" : ""}`}
-                          onClick={() => handleSelectFeeCategory("fine")}
-                          disabled={student.fine_fee <= 0}
-                        >
-                          <span className="cat-pill-icon">⚠️</span>
-                          <div className="cat-pill-info">
-                            <strong>Late Fine Only</strong>
-                            <small>{currency(student.fine_fee)}</small>
-                          </div>
-                        </button>
-                      </div>
+              <div className="smart-pay-grid">
+                {/* Left Card: Payment Details */}
+                <div className="smart-pay-card payment-details-card">
+                  <h3 className="card-block-title">Payment Details</h3>
+                  
+                  <div className="payment-details-table">
+                    <div className="p-detail-row">
+                      <span className="p-detail-label">Student Name</span>
+                      <strong className="p-detail-val">{student.name}</strong>
                     </div>
-                  )}
-
-                  {/* Enter Amount to Pay Option */}
-                  <div className="payment-amount-box">
-                    <div className="payment-amount-header">
-                      <div className="payment-amount-meta">
-                        <label htmlFor="student-pay-amount" className="payment-amount-label">
-                          Amount to Pay ({feeCategory === "fine" ? "Late Fine Only" : feeCategory === "tuition" ? "Tuition Fee Only" : "Total Fees"}) (₹)
-                        </label>
-                        {customAmount !== null && customAmount !== String(targetCategoryAmount) && (
-                          <span className="payment-amount-badge">Custom Amount</span>
-                        )}
-                      </div>
-                      {customAmount !== null && customAmount !== String(targetCategoryAmount) && (
-                        <button
-                          type="button"
-                          className="reset-amount-link"
-                          onClick={() => setCustomAmount(null)}
-                          title="Reset to category balance"
-                        >
-                          ↩ Reset to Due ({currency(targetCategoryAmount)})
-                        </button>
-                      )}
+                    <div className="p-detail-row">
+                      <span className="p-detail-label">Student ID</span>
+                      <strong className="p-detail-val monospace">{student.student_id}</strong>
+                    </div>
+                    <div className="p-detail-row">
+                      <span className="p-detail-label">Course</span>
+                      <strong className="p-detail-val">B.Tech (CSE)</strong>
+                    </div>
+                    <div className="p-detail-row">
+                      <span className="p-detail-label">Year</span>
+                      <strong className="p-detail-val">2nd Year</strong>
                     </div>
 
-                    <div className="direct-amount-input-wrap">
-                      <span className="currency-prefix">₹</span>
+                    {/* Fee Category Selector */}
+                    {(student.due_fee > 0 || student.fine_fee > 0) && (
+                      <div className="p-detail-row fee-category-select-row">
+                        <span className="p-detail-label">Fee Type</span>
+                        <div className="fee-type-btn-group">
+                          <button
+                            type="button"
+                            className={`fee-type-pill ${feeCategory === "all" ? "active" : ""}`}
+                            onClick={() => handleSelectFeeCategory("all")}
+                            title={`Total: ${currency(student.due_fee + student.fine_fee)}`}
+                          >
+                            <span>Both</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`fee-type-pill ${feeCategory === "tuition" ? "active" : ""}`}
+                            onClick={() => handleSelectFeeCategory("tuition")}
+                            disabled={student.due_fee <= 0}
+                            title={`Tuition: ${currency(student.due_fee)}`}
+                          >
+                            <span>Tuition</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`fee-type-pill fine-type-pill ${feeCategory === "fine" ? "active" : ""}`}
+                            onClick={() => handleSelectFeeCategory("fine")}
+                            disabled={student.fine_fee <= 0}
+                            title={`Fine: ${currency(student.fine_fee)}`}
+                          >
+                            <span>Late Fine</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Amount Highlight Row */}
+                    <div className="p-detail-row amount-highlight-row">
+                      <span className="p-detail-label amount-label">Amount</span>
+                      <strong className="p-detail-amount">{currency(numericAmount)}</strong>
+                    </div>
+                  </div>
+
+                  {/* Preset amounts or custom entry */}
+                  <div className="p-amount-controls">
+                    <div className="preset-chips-row">
+                      <button
+                        type="button"
+                        className={`preset-chip ${customAmount === null ? "active" : ""}`}
+                        onClick={() => setCustomAmount(null)}
+                      >
+                        Full Due ({currency(targetCategoryAmount)})
+                      </button>
+                      {[5000, 10000, 20000].map((amt) => {
+                        if (amt >= targetCategoryAmount) return null;
+                        return (
+                          <button
+                            key={amt}
+                            type="button"
+                            className={`preset-chip ${customAmount === String(amt) ? "active" : ""}`}
+                            onClick={() => setCustomAmount(String(amt))}
+                          >
+                            {currency(amt)}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="custom-input-wrap">
+                      <label htmlFor="custom-amount-input">Custom Amount (₹):</label>
                       <input
-                        id="student-pay-amount"
+                        id="custom-amount-input"
                         type="number"
                         min="1"
-                        step="any"
-                        value={currentAmountStr}
+                        max={targetCategoryAmount}
+                        step="1"
+                        placeholder={`Enter amount (max ${targetCategoryAmount})`}
+                        value={customAmount ?? ""}
                         onChange={(e) => setCustomAmount(e.target.value)}
-                        className="direct-amount-input"
-                        placeholder="Enter amount to pay"
                       />
                     </div>
-
-                    <div className="payment-amount-presets">
-                      <button
-                        type="button"
-                        className={`preset-chip ${currentAmountStr === String(targetCategoryAmount) ? "active" : ""}`}
-                        onClick={() => setCustomAmount(String(targetCategoryAmount))}
-                      >
-                        {feeCategory === "fine" ? "Full Fine" : feeCategory === "tuition" ? "Full Tuition" : "Full Due"} ({currency(targetCategoryAmount)})
-                      </button>
-
-                      {student.fine_fee > 0 && feeCategory !== "fine" && (
-                        <button
-                          type="button"
-                          className={`preset-chip fine-preset ${currentAmountStr === String(student.fine_fee) ? "active" : ""}`}
-                          onClick={() => {
-                            setFeeCategory("fine");
-                            setCustomAmount(String(student.fine_fee));
-                          }}
-                        >
-                          ⚠️ Late Fine ({currency(student.fine_fee)})
-                        </button>
-                      )}
-                      {totalPayable > 10000 && (
-                        <button
-                          type="button"
-                          className={`preset-chip ${currentAmountStr === "10000" ? "active" : ""}`}
-                          onClick={() => setCustomAmount("10000")}
-                        >
-                          ₹10,000
-                        </button>
-                      )}
-                      {totalPayable > 5000 && (
-                        <button
-                          type="button"
-                          className={`preset-chip ${currentAmountStr === "5000" ? "active" : ""}`}
-                          onClick={() => setCustomAmount("5000")}
-                        >
-                          ₹5,000
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className={`preset-chip ${currentAmountStr === "1000" ? "active" : ""}`}
-                        onClick={() => setCustomAmount("1000")}
-                      >
-                        ₹1,000
-                      </button>
-                      <button
-                        type="button"
-                        className={`preset-chip ${currentAmountStr === "1" ? "active" : ""}`}
-                        onClick={() => setCustomAmount("1")}
-                      >
-                        ₹1 (Test Pay)
-                      </button>
-                      <button
-                        type="button"
-                        className={`preset-chip unlock-chip ${currentAmountStr === "" ? "active" : ""}`}
-                        onClick={() => setCustomAmount("")}
-                        title="Clear amount so you can enter any amount directly in PhonePe / GPay"
-                      >
-                        🔓 {currentAmountStr === "" ? "✓ Open Amount (In App)" : "Enter amount in app"}
-                      </button>
-                    </div>
-
-                    <p className="payment-mode-hint">
-                      {hasValidAmount ? (
-                        <>Scanner and UPI apps will pay <b>{currency(numericAmount)}</b>. You can change this anytime.</>
-                      ) : (
-                        <>✓ Amount unlocked. Scan the QR code or tap an app to enter whatever amount you want on your phone.</>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="upi-section-title">Choose Payment App</div>
-                  <div className="upi-apps-grid">
-                    {apps.map((app) => (
-                      <button
-                        key={app.id}
-                        type="button"
-                        className={`upi-app-btn ${app.id}-btn`}
-                        onClick={() => handleAppSelect(app)}
-                        title={`Pay with ${app.name} or visit website`}
-                      >
-                        {app.renderIcon()}
-                        <span>{app.name}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* SITS Multi-Option Gateway Launcher */}
-                  <div className="gateway-launcher-box">
-                    <button
-                      type="button"
-                      className="primary-button gateway-launch-main-btn"
-                      onClick={() => openGatewayModal("upi")}
-                    >
-                      <span>🔒 Pay Online via Gateway (UPI, Debit/Credit Card, Net Banking)</span>
-                      <span className="btn-arrow" aria-hidden="true">→</span>
-                    </button>
-                    <small className="gateway-launcher-sub">
-                      All options: Google Pay, PhonePe, Paytm, RuPay, Visa, MasterCard, Net Banking (SBI, HDFC, ICICI, etc.)
-                    </small>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="secondary-button open-any-upi-btn"
-                    onClick={() => handleAppSelect({
-                      id: "generic",
-                      name: "Any UPI App",
-                      website: "https://www.npci.org.in/what-we-do/upi/product-overview",
-                      uri: genericUpiUri,
-                      instructions: "Scan the QR code on your screen with any UPI-compatible app (GPay, PhonePe, Paytm, BHIM, CRED, Amazon Pay, or Mobile Banking).",
-                      renderIcon: () => <UpiIcon />
-                    })}
-                    style={{ width: "100%", marginTop: 10 }}
-                  >
-                    <UpiIcon />
-                    <span>Open Any UPI App</span>
-                  </button>
-
-                  {/* Prominent Paid & Claim Receipt Button */}
-                  <div className="payment-claim-wrap">
-                    <button
-                      type="button"
-                      className="claim-receipt-cta"
-                      onClick={() => openPaymentConfirmation("UPI App / QR Scanner")}
-                    >
-                      <span className="claim-icon">🧾</span>
-                      <div className="claim-text">
-                        <strong>I Have Paid — Get Fee Receipt</strong>
-                        <small>Instant verified SITS receipt, printable PDF & balance update</small>
-                      </div>
-                      <span className="claim-arrow">→</span>
-                    </button>
-                  </div>
-
-                  {isEditingUpi ? (
-                    <form className="upi-edit-panel animate-fade-in" onSubmit={handleSaveUpi}>
-                      <div className="upi-edit-panel-header">
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 16 }} aria-hidden="true">✏️</span>
-                          <strong>Change College UPI ID</strong>
-                        </div>
-                        <button
-                          type="button"
-                          className="upi-edit-panel-close"
-                          onClick={() => setIsEditingUpi(false)}
-                          aria-label="Close edit panel"
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      <p className="upi-edit-panel-note">
-                        Update the college UPI VPA and payee name. The payment QR code and app links will regenerate immediately.
-                      </p>
-
-                      <div className="upi-edit-fields">
-                        <div className="upi-edit-field">
-                          <label htmlFor="card-upi-vpa">College UPI ID (VPA)</label>
-                          <input
-                            id="card-upi-vpa"
-                            required
-                            type="text"
-                            value={newVpa}
-                            onChange={(e) => setNewVpa(e.target.value)}
-                            placeholder="e.g. 8688099587@ybl or college@sbi"
-                            autoFocus
-                          />
-                        </div>
-
-                        <div className="upi-edit-field">
-                          <label htmlFor="card-upi-payee">Payee / College Name</label>
-                          <input
-                            id="card-upi-payee"
-                            type="text"
-                            value={newPayee}
-                            onChange={(e) => setNewPayee(e.target.value)}
-                            placeholder="e.g. SITS"
-                          />
-                        </div>
-                      </div>
-
-                      {upiSaveError && <p className="form-error" style={{ margin: "4px 0", fontSize: 12 }}>{upiSaveError}</p>}
-                      {upiSaveSuccess && <p className="form-message" style={{ margin: "4px 0", fontSize: 12 }}>{upiSaveSuccess}</p>}
-
-                      <div className="upi-edit-actions-row">
-                        <button
-                          type="button"
-                          className="secondary-button"
-                          onClick={() => setIsEditingUpi(false)}
-                          disabled={savingUpi}
-                          style={{ padding: "6px 14px", fontSize: 12 }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="primary-button"
-                          disabled={savingUpi}
-                          style={{ margin: 0, padding: "6px 16px", fontSize: 12 }}
-                        >
-                          {savingUpi ? (
-                            <>
-                              <span className="btn-spinner" />
-                              Saving...
-                            </>
-                          ) : (
-                            "Save UPI ID"
-                          )}
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="upi-vpa-box">
-                      <span>UPI ID: <code>{vpa}</code></span>
-                      <div className="upi-vpa-actions">
-                        <button
-                          type="button"
-                          className="edit-btn"
-                          onClick={openEditModal}
-                          title="Edit college UPI ID"
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="copy-btn"
-                          onClick={copyUpiId}
-                          title="Copy UPI ID"
-                        >
-                          {copied ? "Copied! ✓" : "Copy"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="pay-desktop-hint">
-                    💡 <b>Using a PC or laptop?</b> Click any app above to view instructions & visit its official website, or scan the QR code with your phone.
-                  </p>
-
-                  <div className="upi-accepted-tags">
-                    <small>Accepted:</small>
-                    <span>Google Pay</span>
-                    <span>PhonePe</span>
-                    <span>Paytm</span>
-                    <span>BHIM</span>
-                    <span>CRED</span>
-                    <span>Amazon Pay</span>
                   </div>
                 </div>
-              ) : (
-                <p className="success-text" style={{ marginTop: 14, fontWeight: 600 }}>
-                  ✓ All fees are fully settled. No payment required.
-                </p>
-              )}
-            </div>
 
-            <div className="qr-wrap">
-              <QRCodeSVG value={genericUpiUri} size={132} includeMargin />
-              <small>{hasValidAmount ? `Scan to pay ${currency(numericAmount)}` : "Scan to pay"}</small>
-            </div>
-        </section>
+                {/* Right Card: Select Payment Method */}
+                <div className="smart-pay-card select-method-card">
+                  <h3 className="card-block-title">Select Payment Method</h3>
+
+                  <div className="payment-methods-list">
+                    {/* Method 1: Razorpay (UPI / Card / Net Banking) */}
+                    <div
+                      className={`payment-method-item ${selectedPaymentMethod === "razorpay" ? "selected" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("razorpay")}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="method-left">
+                        <div className={`custom-radio ${selectedPaymentMethod === "razorpay" ? "checked" : ""}`}>
+                          <div className="radio-dot" />
+                        </div>
+                        <span className="method-title">Razorpay (UPI / Card / Net Banking)</span>
+                      </div>
+                      <div className="method-badges">
+                        <RazorpayBadge />
+                      </div>
+                    </div>
+
+                    {/* Method 2: Credit / Debit Card */}
+                    <div
+                      className={`payment-method-item ${selectedPaymentMethod === "card" ? "selected" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("card")}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="method-left">
+                        <div className={`custom-radio ${selectedPaymentMethod === "card" ? "checked" : ""}`}>
+                          <div className="radio-dot" />
+                        </div>
+                        <span className="method-title">Credit / Debit Card</span>
+                      </div>
+                      <div className="method-badges">
+                        <VisaBadge />
+                        <MastercardBadge />
+                      </div>
+                    </div>
+
+                    {/* Method 3: UPI (Google Pay / PhonePe / Paytm) */}
+                    <div
+                      className={`payment-method-item ${selectedPaymentMethod === "upi" ? "selected" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("upi")}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="method-left">
+                        <div className={`custom-radio ${selectedPaymentMethod === "upi" ? "checked" : ""}`}>
+                          <div className="radio-dot" />
+                        </div>
+                        <span className="method-title">UPI (Google Pay / PhonePe / Paytm)</span>
+                      </div>
+                      <div className="method-badges upi-brand-logos">
+                        <GPayIcon />
+                        <PhonePeIcon />
+                        <PaytmIcon />
+                      </div>
+                    </div>
+
+                    {/* Method 4: Net Banking */}
+                    <div
+                      className={`payment-method-item ${selectedPaymentMethod === "netbanking" ? "selected" : ""}`}
+                      onClick={() => setSelectedPaymentMethod("netbanking")}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="method-left">
+                        <div className={`custom-radio ${selectedPaymentMethod === "netbanking" ? "checked" : ""}`}>
+                          <div className="radio-dot" />
+                        </div>
+                        <span className="method-title">Net Banking</span>
+                      </div>
+                      <div className="method-badges">
+                        <span className="bank-glyph-icon" aria-hidden="true">🏛️</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Big Blue Pay Securely Button */}
+                  <button
+                    type="button"
+                    className="pay-securely-btn"
+                    onClick={handlePaySecurely}
+                    disabled={!hasValidAmount}
+                  >
+                    <span className="lock-icon" aria-hidden="true">🔒</span>
+                    <span>Pay Securely {hasValidAmount ? currency(numericAmount) : ""}</span>
+                  </button>
+
+                  {/* 256-Bit SSL Encryption Pill */}
+                  <div className="payment-security-pill">
+                    <span className="security-icon" aria-hidden="true">🛡️</span>
+                    <span>Your payment is secured with 256-bit SSL encryption.</span>
+                  </div>
+
+                  {/* Offline/Manual UTR Claim Link */}
+                  <div className="offline-claim-footer">
+                    <button
+                      type="button"
+                      className="offline-claim-link-btn"
+                      onClick={() => openPaymentConfirmation("UPI App / QR Scanner")}
+                    >
+                      🧾 Already paid offline? Claim Receipt with UTR →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
 
             {/* Step 2 Navigation Footer */}
             <div className="step-navigation-footer animate-fade-up">
@@ -1628,6 +1475,36 @@ function UpiIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M13.5 4.5L7.5 19.5h3l6-15h-3z" fill="#097939"/>
       <path d="M16.5 4.5L10.5 19.5h3l6-15h-3z" fill="#ED752E"/>
+    </svg>
+  );
+}
+
+function RazorpayBadge() {
+  return (
+    <div className="razorpay-badge-wrap" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M14.5 2L5 14h6l-2 8 11-13h-6.5l2.5-7z" fill="#0284c7" />
+      </svg>
+      <span style={{ fontStyle: "italic", fontWeight: 800, fontSize: 13, color: "#0c2340", letterSpacing: -0.5 }}>
+        Razor<span style={{ color: "#0284c7" }}>pay</span>
+      </span>
+    </div>
+  );
+}
+
+function VisaBadge() {
+  return (
+    <span className="visa-badge-text" style={{ fontWeight: 900, fontStyle: "italic", fontSize: 13, color: "#1a1f71", letterSpacing: 0.5 }}>
+      VISA
+    </span>
+  );
+}
+
+function MastercardBadge() {
+  return (
+    <svg width="28" height="18" viewBox="0 0 36 24" fill="none" aria-hidden="true" style={{ verticalAlign: "middle" }}>
+      <circle cx="13" cy="12" r="10" fill="#EB001B" />
+      <circle cx="23" cy="12" r="10" fill="#F79E1B" fillOpacity="0.88" />
     </svg>
   );
 }
