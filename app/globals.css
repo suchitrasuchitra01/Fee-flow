@@ -112,12 +112,12 @@ button { cursor: pointer; }
   font-weight: 800;
   letter-spacing: -0.8px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   font-size: 20px;
 }
 .sits-logo {
-  width: 132px;
+  width: 140px;
   height: auto;
   object-fit: contain;
   transition: transform 0.3s var(--ease-out);
@@ -126,10 +126,10 @@ button { cursor: pointer; }
   transform: scale(1.03);
 }
 .portal-name {
-  border-left: 1px solid #cbd6ce;
+  border-left: 1.5px solid #cbd6ce;
   color: inherit;
   font-size: 16px;
-  padding-left: 10px;
+  padding-left: 12px;
   transition: color 0.2s ease;
 }
 .brand em {
@@ -147,17 +147,72 @@ button { cursor: pointer; }
 .auth-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(360px, 45%) 1fr;
+  grid-template-columns: minmax(400px, 46%) 1fr;
 }
 .auth-intro {
   background: #164c3b;
   color: white;
-  padding: 42px clamp(35px, 7vw, 105px);
+  padding: 48px clamp(35px, 6vw, 90px);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 .auth-intro .portal-name { border-color: #7e9e90; }
+
+/* Login Page Brand Enlargement & Alignment */
+.auth-brand-wrap {
+  margin-bottom: 26px;
+}
+.auth-intro .brand.login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0;
+  white-space: nowrap;
+}
+.auth-intro .brand.login-brand .sits-logo {
+  width: clamp(240px, 22vw, 310px);
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.22));
+  transition: transform 0.3s var(--ease-spring);
+}
+.auth-intro .brand.login-brand:hover .sits-logo {
+  transform: scale(1.03);
+}
+.auth-intro .brand.login-brand .portal-name {
+  border-left: 2.5px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  font-size: clamp(28px, 2.4vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  padding-left: 20px;
+  line-height: 1;
+}
+
+.mobile-brand {
+  display: none;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.mobile-brand .brand.login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+.mobile-brand .brand.login-brand .sits-logo {
+  width: 210px;
+  max-width: 100%;
+  height: auto;
+}
+.mobile-brand .brand.login-brand .portal-name {
+  font-size: 24px;
+  font-weight: 800;
+  border-left: 2px solid #cbd5e1;
+  padding-left: 16px;
+  color: var(--ink);
+  line-height: 1;
+}
 .intro-content {
   margin: auto 0;
   max-width: 480px;

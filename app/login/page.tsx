@@ -43,7 +43,9 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <div className="animate-fade-in"><Brand /></div>
+        <div className="auth-brand-wrap animate-fade-in">
+          <Brand className="login-brand" />
+        </div>
         <div className="intro-content animate-fade-up stagger-1">
           <p className="eyebrow">STUDENT FINANCE, SIMPLIFIED</p>
           <h1>Fees, made<br />clear.</h1>
@@ -53,7 +55,7 @@ export default function LoginPage() {
       </section>
       <section className="login-panel">
         <form className="login-card animate-fade-up stagger-2" onSubmit={handleLogin}>
-          <div className="mobile-brand"><Brand /></div>
+          <div className="mobile-brand"><Brand className="login-brand" /></div>
           <p className="eyebrow">WELCOME BACK</p>
           <h2>Sign in to your account</h2>
           <p className="muted">Use the credentials provided by your institution.</p>
