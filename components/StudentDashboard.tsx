@@ -25,7 +25,26 @@ export default function StudentDashboard() {
   const [copied, setCopied] = useState(false);
   const [activeApp, setActiveApp] = useState<AppInfo | null>(null);
 
+  // Institution UPI & Payee settings
+  const [vpa, setVpa] = useState("8688099587@ybl");
+  const [payee, setPayee] = useState("SITS");
+  const [isEditingUpi, setIsEditingUpi] = useState(false);
+  const [newVpa, setNewVpa] = useState("");
+  const [newPayee, setNewPayee] = useState("");
+  const [savingUpi, setSavingUpi] = useState(false);
+  const [upiSaveError, setUpiSaveError] = useState("");
+  const [upiSaveSuccess, setUpiSaveSuccess] = useState("");
+
   useEffect(() => {
+    // Load persisted UPI settings
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.upi_id) setVpa(data.upi_id);
+        if (data.payee_name) setPayee(data.payee_name);
+      })
+      .catch((err) => console.warn("Using default settings:", err));
+
     const load = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -61,10 +80,46 @@ export default function StudentDashboard() {
   }
 
   function copyUpiId() {
-    const vpa = process.env.NEXT_PUBLIC_UPI_ID || "8688099587@ybl";
     navigator.clipboard.writeText(vpa);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function openEditModal() {
+    setNewVpa(vpa);
+    setNewPayee(payee);
+    setUpiSaveError("");
+    setUpiSaveSuccess("");
+    setIsEditingUpi(true);
+  }
+
+  async function handleSaveUpi(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingUpi(true);
+    setUpiSaveError("");
+    setUpiSaveSuccess("");
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ upi_id: newVpa, payee_name: newPayee || "SITS" })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to update UPI settings.");
+      }
+      setVpa(data.settings.upi_id);
+      setPayee(data.settings.payee_name);
+      setUpiSaveSuccess("UPI ID updated successfully!");
+      setTimeout(() => {
+        setUpiSaveSuccess("");
+        setIsEditingUpi(false);
+      }, 1000);
+    } catch (err) {
+      setUpiSaveError(err instanceof Error ? err.message : "Failed to update UPI ID.");
+    } finally {
+      setSavingUpi(false);
+    }
   }
 
   if (loading || !student) {
@@ -76,8 +131,6 @@ export default function StudentDashboard() {
     );
   }
 
-  const vpa = process.env.NEXT_PUBLIC_UPI_ID || "8688099587@ybl";
-  const payee = process.env.NEXT_PUBLIC_PAYEE_NAME || "SITS";
   const totalPayable = student.due_fee + student.fine_fee;
   const note = `Fee payment ${student.student_id}`;
 
@@ -125,7 +178,6 @@ export default function StudentDashboard() {
 
   function handleAppSelect(app: AppInfo) {
     setActiveApp(app);
-    // On mobile devices, attempt to open the app directly
     if (typeof window !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       window.location.href = app.uri;
     }
@@ -239,12 +291,106 @@ export default function StudentDashboard() {
                     <span>Open Any UPI App</span>
                   </button>
 
-                  <div className="upi-vpa-box">
-                    <span>UPI ID: <code>{vpa}</code></span>
-                    <button type="button" className="copy-btn" onClick={copyUpiId}>
-                      {copied ? "Copied! ✓" : "Copy"}
-                    </button>
-                  </div>
+                  {isEditingUpi ? (
+                    <form className="upi-edit-panel animate-fade-in" onSubmit={handleSaveUpi}>
+                      <div className="upi-edit-panel-header">
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 16 }} aria-hidden="true">✏️</span>
+                          <strong>Change College UPI ID</strong>
+                        </div>
+                        <button
+                          type="button"
+                          className="upi-edit-panel-close"
+                          onClick={() => setIsEditingUpi(false)}
+                          aria-label="Close edit panel"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <p className="upi-edit-panel-note">
+                        Update the college UPI VPA and payee name. The payment QR code and app links will regenerate immediately.
+                      </p>
+
+                      <div className="upi-edit-fields">
+                        <div className="upi-edit-field">
+                          <label htmlFor="card-upi-vpa">College UPI ID (VPA)</label>
+                          <input
+                            id="card-upi-vpa"
+                            required
+                            type="text"
+                            value={newVpa}
+                            onChange={(e) => setNewVpa(e.target.value)}
+                            placeholder="e.g. 8688099587@ybl or college@sbi"
+                            autoFocus
+                          />
+                        </div>
+
+                        <div className="upi-edit-field">
+                          <label htmlFor="card-upi-payee">Payee / College Name</label>
+                          <input
+                            id="card-upi-payee"
+                            type="text"
+                            value={newPayee}
+                            onChange={(e) => setNewPayee(e.target.value)}
+                            placeholder="e.g. SITS"
+                          />
+                        </div>
+                      </div>
+
+                      {upiSaveError && <p className="form-error" style={{ margin: "4px 0", fontSize: 12 }}>{upiSaveError}</p>}
+                      {upiSaveSuccess && <p className="form-message" style={{ margin: "4px 0", fontSize: 12 }}>{upiSaveSuccess}</p>}
+
+                      <div className="upi-edit-actions-row">
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() => setIsEditingUpi(false)}
+                          disabled={savingUpi}
+                          style={{ padding: "6px 14px", fontSize: 12 }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="primary-button"
+                          disabled={savingUpi}
+                          style={{ margin: 0, padding: "6px 16px", fontSize: 12 }}
+                        >
+                          {savingUpi ? (
+                            <>
+                              <span className="btn-spinner" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save UPI ID"
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="upi-vpa-box">
+                      <span>UPI ID: <code>{vpa}</code></span>
+                      <div className="upi-vpa-actions">
+                        <button
+                          type="button"
+                          className="edit-btn"
+                          onClick={openEditModal}
+                          title="Edit college UPI ID"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="copy-btn"
+                          onClick={copyUpiId}
+                          title="Copy UPI ID"
+                        >
+                          {copied ? "Copied! ✓" : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <p className="pay-desktop-hint">
                     💡 <b>Using a PC or laptop?</b> Click any app above to view instructions & visit its official website, or scan the QR code with your phone.
@@ -306,9 +452,27 @@ export default function StudentDashboard() {
 
             <div className="upi-vpa-box">
               <span>UPI ID: <code>{vpa}</code></span>
-              <button type="button" className="copy-btn" onClick={copyUpiId}>
-                {copied ? "Copied! ✓" : "Copy"}
-              </button>
+              <div className="upi-vpa-actions">
+                <button
+                  type="button"
+                  className="edit-btn"
+                  onClick={() => {
+                    setActiveApp(null);
+                    openEditModal();
+                  }}
+                  title="Edit UPI ID"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  type="button"
+                  className="copy-btn"
+                  onClick={copyUpiId}
+                  title="Copy UPI ID"
+                >
+                  {copied ? "Copied! ✓" : "Copy"}
+                </button>
+              </div>
             </div>
 
             <div className="modal-action-row">

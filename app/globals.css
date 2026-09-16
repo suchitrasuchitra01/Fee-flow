@@ -612,11 +612,36 @@ button { cursor: pointer; }
   color: var(--ink);
   font-weight: 600;
 }
-.copy-btn {
+.upi-vpa-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.edit-btn {
   background: white;
-  border: 1px solid #cbd8d0;
+  border: 1px solid #b7cec1;
   border-radius: 6px;
   padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e5c3e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.edit-btn:hover {
+  background: #e8f3ec;
+  border-color: #2e8563;
+  color: #0f3e27;
+  transform: translateY(-1px);
+}
+.copy-btn {
+  background: white;
+  border: 1px solid #b7cec1;
+  border-radius: 6px;
+  padding: 4px 11px;
   font-size: 11px;
   font-weight: 700;
   color: var(--green);
@@ -629,6 +654,126 @@ button { cursor: pointer; }
 .copy-btn:hover {
   background: #eef7ee;
   border-color: var(--green);
+  transform: translateY(-1px);
+}
+.upi-edit-panel {
+  background: #f9fbf9;
+  border: 1.5px solid #2e8563;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 12px;
+  box-shadow: 0 4px 14px rgba(46, 133, 99, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.upi-edit-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a4231;
+}
+.upi-edit-panel-note {
+  margin: 0;
+  font-size: 11px;
+  color: #53695d;
+  line-height: 1.4;
+}
+.upi-edit-panel-close {
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  color: #6a7c72;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.upi-edit-panel-close:hover {
+  background: #e5ece7;
+  color: #111;
+}
+.upi-edit-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .upi-edit-fields {
+    grid-template-columns: 1fr;
+  }
+}
+.upi-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.upi-edit-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b5548;
+}
+.upi-edit-field input {
+  padding: 8px 10px;
+  border: 1px solid #c5d4cb;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.upi-edit-field input:focus {
+  border-color: #2e8563;
+  box-shadow: 0 0 0 3px #dff1e7;
+}
+.upi-edit-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.upi-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+.upi-edit-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #33463c;
+}
+.upi-edit-form input {
+  padding: 10px 12px;
+  border: 1px solid #d7dfd9;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.upi-edit-form input:focus {
+  border-color: #2e8563;
+  box-shadow: 0 0 0 3px #dff1e7;
+}
+.upi-edit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+.payment-settings-card {
+  margin-top: 18px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+  box-shadow: var(--shadow);
 }
 .upi-accepted-tags {
   display: flex;

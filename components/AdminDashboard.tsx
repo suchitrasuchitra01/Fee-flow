@@ -39,6 +39,14 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
+
+  // Payment configuration state
+  const [upiId, setUpiId] = useState("8688099587@ybl");
+  const [payeeName, setPayeeName] = useState("SITS");
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsMsg, setSettingsMsg] = useState("");
+  const [settingsError, setSettingsError] = useState("");
+
   const totals = useMemo(() => students.reduce((a, s) => ({ total: a.total + s.total_fee, paid: a.paid + s.paid_fee, due: a.due + s.due_fee + s.fine_fee }), { total: 0, paid: 0, due: 0 }), [students]);
 
   async function load() {
@@ -50,6 +58,15 @@ export default function AdminDashboard() {
     const { data } = await supabase.from("students").select("*").order("created_at", { ascending: false });
     setStudents(data || []);
     setLoading(false);
+
+    // Load institution settings
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((d) => {
+        if (d.upi_id) setUpiId(d.upi_id);
+        if (d.payee_name) setPayeeName(d.payee_name);
+      })
+      .catch(() => {});
   }
 
   useEffect(() => { load(); }, []);
@@ -168,6 +185,28 @@ export default function AdminDashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function saveUpiSettings(e: FormEvent) {
+    e.preventDefault();
+    setSavingSettings(true);
+    setSettingsMsg("");
+    setSettingsError("");
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ upi_id: upiId, payee_name: payeeName }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "Failed to update settings.");
+      setSettingsMsg("Payment settings updated successfully! All student QR codes updated.");
+      setTimeout(() => setSettingsMsg(""), 3500);
+    } catch (err) {
+      setSettingsError(err instanceof Error ? err.message : "Error saving payment settings.");
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
   async function logout() { await createClient().auth.signOut(); router.replace("/login"); }
   const due = Math.max(0, form.total_fee - form.paid_fee);
 
@@ -197,7 +236,7 @@ export default function AdminDashboard() {
         <div className="animate-fade-up">
           <p className="eyebrow">ADMIN CONSOLE</p>
           <h1>Fee collection, at a glance.</h1>
-          <p className="muted">Create student logins, import fee records, and keep every account accurate.</p>
+          <p className="muted">Create student logins, import fee records, and configure institutional payments.</p>
         </div>
 
         <section className="admin-metrics animate-fade-up stagger-1">
@@ -208,80 +247,128 @@ export default function AdminDashboard() {
         </section>
 
         <section className="admin-layout">
-          <form className={`student-form animate-fade-up stagger-2 ${editingId ? "is-editing" : ""}`} onSubmit={save}>
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">{editingId ? "UPDATE STUDENT" : "ADD STUDENT"}</p>
-                <h2>{editingId ? "Update fee record" : "Student fee record"}</h2>
+          <div className="admin-sidebar">
+            <form className={`student-form animate-fade-up stagger-2 ${editingId ? "is-editing" : ""}`} onSubmit={save}>
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">{editingId ? "UPDATE STUDENT" : "ADD STUDENT"}</p>
+                  <h2>{editingId ? "Update fee record" : "Student fee record"}</h2>
+                </div>
               </div>
-            </div>
-            <p className="form-note">New students receive a login using their email and the default password <b>SITS@2024</b>. Select a record below to update its fees.</p>
-            <div className="form-grid">
-              <label>
-                H.T.No
-                <input required readOnly={Boolean(editingId)} value={form.student_id} onChange={e => update("student_id", e.target.value)} placeholder="21A91A0501" />
-              </label>
-              <label>
-                Student name
-                <input required value={form.name} onChange={e => update("name", e.target.value)} placeholder="Student name" />
-              </label>
-              <label>
-                Email ID
-                <input required readOnly={Boolean(editingId)} type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="student@example.com" />
-              </label>
-              <label>
-                Total fee
-                <input required min="0" type="number" value={form.total_fee} onChange={e => update("total_fee", e.target.value)} />
-              </label>
-              <label>
-                Paid fee
-                <input required min="0" type="number" value={form.paid_fee} onChange={e => update("paid_fee", e.target.value)} />
-              </label>
-              <label>
-                Fine fee
-                <input required min="0" type="number" value={form.fine_fee} onChange={e => update("fine_fee", e.target.value)} />
-              </label>
-              <div className="calculated-field">
-                <span>Due fee (automatic)</span>
-                <strong>{currency(due)}</strong>
+              <p className="form-note">New students receive a login using their email and the default password <b>SITS@2024</b>. Select a record below to update its fees.</p>
+              <div className="form-grid">
+                <label>
+                  H.T.No
+                  <input required readOnly={Boolean(editingId)} value={form.student_id} onChange={e => update("student_id", e.target.value)} placeholder="21A91A0501" />
+                </label>
+                <label>
+                  Student name
+                  <input required value={form.name} onChange={e => update("name", e.target.value)} placeholder="Student name" />
+                </label>
+                <label>
+                  Email ID
+                  <input required readOnly={Boolean(editingId)} type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="student@example.com" />
+                </label>
+                <label>
+                  Total fee
+                  <input required min="0" type="number" value={form.total_fee} onChange={e => update("total_fee", e.target.value)} />
+                </label>
+                <label>
+                  Paid fee
+                  <input required min="0" type="number" value={form.paid_fee} onChange={e => update("paid_fee", e.target.value)} />
+                </label>
+                <label>
+                  Fine fee
+                  <input required min="0" type="number" value={form.fine_fee} onChange={e => update("fine_fee", e.target.value)} />
+                </label>
+                <div className="calculated-field">
+                  <span>Due fee (automatic)</span>
+                  <strong>{currency(due)}</strong>
+                </div>
               </div>
-            </div>
-            {message && <p className="form-message">{message}</p>}
-            <div className="form-actions">
-              <button className="primary-button" disabled={saving}>
-                {saving ? (
-                  <>
-                    <span className="btn-spinner" />
-                    Saving...
-                  </>
-                ) : editingId ? (
-                  "Update fee record"
-                ) : (
-                  "Create student account"
-                )}
-              </button>
-              {editingId && (
-                <button type="button" className="secondary-button" onClick={() => { setEditingId(null); setForm(initialForm); }}>
-                  Cancel
+              {message && <p className="form-message">{message}</p>}
+              <div className="form-actions">
+                <button className="primary-button" disabled={saving}>
+                  {saving ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Saving...
+                    </>
+                  ) : editingId ? (
+                    "Update fee record"
+                  ) : (
+                    "Create student account"
+                  )}
                 </button>
-              )}
-            </div>
-            <div className="import-box">
-              <strong>Bulk import</strong>
-              <span>Accepted headers: H.T.No / student_id, Name, Email ID / email, Total Fee, Paid Fee, Fine Fee. Rupee-formatted amounts are supported.</span>
-              <label className="file-button">
-                {importing ? (
-                  <>
-                    <span className="btn-spinner btn-spinner-green" />
-                    Importing...
-                  </>
-                ) : (
-                  "Choose Excel / CSV"
+                {editingId && (
+                  <button type="button" className="secondary-button" onClick={() => { setEditingId(null); setForm(initialForm); }}>
+                    Cancel
+                  </button>
                 )}
-                <input disabled={importing} type="file" accept=".xlsx,.xls,.csv" onChange={importFile} />
-              </label>
-            </div>
-          </form>
+              </div>
+              <div className="import-box">
+                <strong>Bulk import</strong>
+                <span>Accepted headers: H.T.No / student_id, Name, Email ID / email, Total Fee, Paid Fee, Fine Fee. Rupee-formatted amounts are supported.</span>
+                <label className="file-button">
+                  {importing ? (
+                    <>
+                      <span className="btn-spinner btn-spinner-green" />
+                      Importing...
+                    </>
+                  ) : (
+                    "Choose Excel / CSV"
+                  )}
+                  <input disabled={importing} type="file" accept=".xlsx,.xls,.csv" onChange={importFile} />
+                </label>
+              </div>
+            </form>
+
+            <section className="payment-settings-card animate-fade-up stagger-3">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">PAYMENT CONFIGURATION</p>
+                  <h2>College UPI Payment Details</h2>
+                </div>
+              </div>
+              <p className="form-note">
+                Configure the institutional UPI ID where student payments are credited. Updates instantly across the portal for all students.
+              </p>
+              <form className="upi-edit-form" onSubmit={saveUpiSettings}>
+                <label>
+                  College UPI ID (VPA)
+                  <input
+                    required
+                    type="text"
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    placeholder="e.g. 8688099587@ybl"
+                  />
+                </label>
+                <label>
+                  Payee / College Name
+                  <input
+                    required
+                    type="text"
+                    value={payeeName}
+                    onChange={(e) => setPayeeName(e.target.value)}
+                    placeholder="e.g. SITS"
+                  />
+                </label>
+                {settingsError && <p className="form-error">{settingsError}</p>}
+                {settingsMsg && <p className="form-message">{settingsMsg}</p>}
+                <button className="primary-button" disabled={savingSettings} style={{ marginTop: 8 }}>
+                  {savingSettings ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Update Payment Settings"
+                  )}
+                </button>
+              </form>
+            </section>
+          </div>
 
           <section className="records-card animate-fade-up stagger-3">
             <div className="section-heading">
