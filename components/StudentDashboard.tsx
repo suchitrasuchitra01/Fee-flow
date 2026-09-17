@@ -6,11 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Student, FeeReceipt } from "@/lib/types";
 import { currency, feeStatus } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Brand from "@/components/Brand";
 import FeeReceiptModal from "@/components/FeeReceiptModal";
 import PaymentGatewayModal, { PaymentMode } from "@/components/PaymentGatewayModal";
-import { launchRazorpayCheckout } from "@/lib/razorpay";
+import { WhatsAppIcon } from "@/components/WhatsAppWidget";
 
 type AppInfo = {
   id: string;
@@ -47,8 +46,19 @@ export default function StudentDashboard() {
   const [customAmount, setCustomAmount] = useState<string | null>(null);
   const [feeCategory, setFeeCategory] = useState<"all" | "tuition" | "fine">("all");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"razorpay" | "card" | "upi" | "netbanking">("razorpay");
-  const [razorpayLoading, setRazorpayLoading] = useState(false);
-  const [razorpayError, setRazorpayError] = useState("");
+
+  function handlePaySecurely() {
+    if (selectedPaymentMethod === "card") {
+      openGatewayModal("debit");
+    } else if (selectedPaymentMethod === "upi") {
+      openGatewayModal("upi");
+    } else if (selectedPaymentMethod === "netbanking") {
+      openGatewayModal("netbanking");
+    } else {
+      // Razorpay All-in-One
+      openGatewayModal("upi");
+    }
+  }
 
   // Fee Receipt & Payment Confirmation state
   const [receipts, setReceipts] = useState<FeeReceipt[]>([]);
@@ -60,15 +70,6 @@ export default function StudentDashboard() {
   const [confirmUtr, setConfirmUtr] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [confirmError, setConfirmError] = useState("");
-
-  // Receipt Deletion & Management state
-  const [receiptToDelete, setReceiptToDelete] = useState<FeeReceipt | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [revertBalanceOnDelete, setRevertBalanceOnDelete] = useState(true);
-  const [deletingReceipt, setDeletingReceipt] = useState(false);
-  const [showClearAllModal, setShowClearAllModal] = useState(false);
-  const [revertAllOnClear, setRevertAllOnClear] = useState(true);
-  const [clearingAllReceipts, setClearingAllReceipts] = useState(false);
 
   // Step-by-Step Dashboard Workflow state
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
@@ -274,152 +275,7 @@ export default function StudentDashboard() {
     setActiveStep(3);
   }
 
-  function promptDeleteReceipt(r: FeeReceipt) {
-    setReceiptToDelete(r);
-    setRevertBalanceOnDelete(true);
-    setShowDeleteModal(true);
-  }
 
-  async function handleConfirmDelete() {
-    if (!receiptToDelete || !student) return;
-    setDeletingReceipt(true);
-
-    try {
-      const res = await fetch("/api/payments/receipt", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: student.student_id,
-          receipt_id: receiptToDelete.id,
-          amount_paid: receiptToDelete.amount_paid,
-          fee_type: receiptToDelete.fee_type || "all",
-          revert_balance: revertBalanceOnDelete,
-        }),
-      });
-      const data = await res.json();
-
-      if (data.student) {
-        setStudent(data.student);
-      } else if (revertBalanceOnDelete) {
-        setStudent((prev) => {
-          if (!prev) return null;
-          const amt = receiptToDelete.amount_paid;
-          if (receiptToDelete.fee_type === "fine") {
-            return { ...prev, fine_fee: prev.fine_fee + amt };
-          } else {
-            return {
-              ...prev,
-              paid_fee: Math.max(0, prev.paid_fee - amt),
-              due_fee: prev.due_fee + amt,
-            };
-          }
-        });
-      }
-    } catch (err) {
-      console.warn("Delete receipt network error, falling back to local:", err);
-      if (revertBalanceOnDelete) {
-        setStudent((prev) => {
-          if (!prev) return null;
-          const amt = receiptToDelete.amount_paid;
-          if (receiptToDelete.fee_type === "fine") {
-            return { ...prev, fine_fee: prev.fine_fee + amt };
-          } else {
-            return {
-              ...prev,
-              paid_fee: Math.max(0, prev.paid_fee - amt),
-              due_fee: prev.due_fee + amt,
-            };
-          }
-        });
-      }
-    } finally {
-      const updated = receipts.filter((r) => r.id !== receiptToDelete.id);
-      setReceipts(updated);
-      try {
-        localStorage.setItem(`feeflow_receipts_${student.student_id}`, JSON.stringify(updated));
-      } catch {}
-
-      setDeletingReceipt(false);
-      setShowDeleteModal(false);
-      setReceiptToDelete(null);
-      if (selectedReceiptId === receiptToDelete.id) {
-        setShowReceiptModal(false);
-        setSelectedReceiptId(undefined);
-      }
-    }
-  }
-
-  async function handleConfirmClearAll() {
-    if (!student || receipts.length === 0) return;
-    setClearingAllReceipts(true);
-
-    try {
-      const res = await fetch("/api/payments/receipt", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: student.student_id,
-          clear_all: true,
-          revert_balance: revertAllOnClear,
-          receipts_to_revert: receipts.map((r) => ({
-            amount_paid: r.amount_paid,
-            fee_type: r.fee_type || "all",
-          })),
-        }),
-      });
-      const data = await res.json();
-
-      if (data.student) {
-        setStudent(data.student);
-      } else if (revertAllOnClear) {
-        let totalTuition = 0;
-        let totalFine = 0;
-        for (const r of receipts) {
-          if (r.fee_type === "fine") totalFine += r.amount_paid;
-          else totalTuition += r.amount_paid;
-        }
-        setStudent((prev) =>
-          prev
-            ? {
-                ...prev,
-                paid_fee: Math.max(0, prev.paid_fee - totalTuition),
-                due_fee: prev.due_fee + totalTuition,
-                fine_fee: prev.fine_fee + totalFine,
-              }
-            : null
-        );
-      }
-    } catch (err) {
-      console.warn("Clear all receipts network error, falling back to local:", err);
-      if (revertAllOnClear) {
-        let totalTuition = 0;
-        let totalFine = 0;
-        for (const r of receipts) {
-          if (r.fee_type === "fine") totalFine += r.amount_paid;
-          else totalTuition += r.amount_paid;
-        }
-        setStudent((prev) =>
-          prev
-            ? {
-                ...prev,
-                paid_fee: Math.max(0, prev.paid_fee - totalTuition),
-                due_fee: prev.due_fee + totalTuition,
-                fine_fee: prev.fine_fee + totalFine,
-              }
-            : null
-        );
-      }
-    } finally {
-      setReceipts([]);
-      try {
-        localStorage.removeItem(`feeflow_receipts_${student.student_id}`);
-      } catch {}
-      setClearingAllReceipts(false);
-      setShowClearAllModal(false);
-      setShowReceiptModal(false);
-      setSelectedReceiptId(undefined);
-    }
-  }
 
   function openPaymentConfirmation(appName = "UPI App / QR Scanner") {
     const totalDue = student ? student.due_fee + student.fine_fee : 0;
@@ -593,44 +449,6 @@ export default function StudentDashboard() {
     }
   }
 
-  async function handlePaySecurely() {
-    setRazorpayError("");
-    if (selectedPaymentMethod === "card") {
-      openGatewayModal("debit");
-    } else if (selectedPaymentMethod === "upi") {
-      openGatewayModal("upi");
-    } else if (selectedPaymentMethod === "netbanking") {
-      openGatewayModal("netbanking");
-    } else {
-      // Razorpay All-in-One Checkout with user's test keys
-      if (!student || !hasValidAmount || numericAmount <= 0) {
-        setRazorpayError("Please enter or select a valid payment amount greater than ₹0.");
-        return;
-      }
-      setRazorpayLoading(true);
-      const success = await launchRazorpayCheckout({
-        student,
-        amount: numericAmount,
-        feeType: feeCategory,
-        onSuccess: (receipt, updatedStudent) => {
-          setRazorpayLoading(false);
-          handleGatewayPaymentSuccess(receipt, updatedStudent);
-        },
-        onError: (errMsg) => {
-          setRazorpayLoading(false);
-          setRazorpayError(errMsg);
-          openGatewayModal("upi");
-        },
-        onDismiss: () => {
-          setRazorpayLoading(false);
-        },
-      });
-      if (!success) {
-        setRazorpayLoading(false);
-      }
-    }
-  }
-
   const amParam = hasValidAmount ? `&am=${numericAmount}` : "";
   const baseUpiParams = `pa=${vpa}&pn=${encodeURIComponent(payee)}${amParam}&cu=INR&tn=${encodeURIComponent(note)}`;
   const genericUpiUri = `upi://pay?${baseUpiParams}`;
@@ -681,297 +499,55 @@ export default function StudentDashboard() {
     }
   }
 
-  const paidPercent = student && student.total_fee > 0 ? Math.min(100, Math.round((student.paid_fee / student.total_fee) * 100)) : 100;
-  const recentTxRows = receipts.length > 0 
-    ? receipts.slice(0, 3).map(r => ({
-        date: new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-        amount: r.amount_paid,
-        id: r.id
-      }))
-    : [
-        { date: "16 Aug 2026", amount: 20000, id: "demo-1" },
-        { date: "15 Jul 2026", amount: 15000, id: "demo-2" },
-        { date: "12 Jun 2026", amount: 15000, id: "demo-3" },
-      ];
-
   return (
-    <div className="smart-dashboard-shell">
-      {/* Left Navy Sidebar matching Page 3 */}
-      <aside className="smart-dashboard-sidebar">
-        <div className="sidebar-brand-wrap">
-          <Link href="/" className="smart-brand-link">
-            <div className="smart-brand-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 3.73l6.5 3.55L12 13.82 5.5 10.28 12 6.73zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
-              </svg>
-            </div>
-            <span className="smart-brand-text">
-              Smart<strong>Fee</strong>
-            </span>
-          </Link>
-        </div>
-
-        <nav className="sidebar-nav-menu">
-          <button 
-            type="button" 
-            className={`sidebar-menu-btn ${activeStep === 1 ? "active" : ""}`}
-            onClick={() => goToStep(1)}
-          >
-            <span className="menu-icon">📊</span>
-            <span>Dashboard</span>
-          </button>
-          <Link href="/fee-structure" className="sidebar-menu-btn">
-            <span className="menu-icon">📋</span>
-            <span>Fee Structure</span>
-          </Link>
-          <Link href="/fee-calculator" className="sidebar-menu-btn">
-            <span className="menu-icon">🧮</span>
-            <span>Fee Calculator</span>
-          </Link>
-          <button 
-            type="button" 
-            className={`sidebar-menu-btn ${activeStep === 2 ? "active" : ""}`}
-            onClick={() => goToStep(2)}
-          >
-            <span className="menu-icon">💳</span>
-            <span>My Payments</span>
-          </button>
-          <button 
-            type="button" 
-            className={`sidebar-menu-btn ${activeStep === 3 ? "active" : ""}`}
-            onClick={() => goToStep(3)}
-          >
-            <span className="menu-icon">🧾</span>
-            <span>Download Receipt</span>
-          </button>
-          <button 
-            type="button" 
-            className="sidebar-menu-btn"
-            onClick={() => {
-              goToStep(1);
-              const target = document.querySelector(".profile-card");
-              if (target) target.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
-            <span className="menu-icon">👤</span>
-            <span>Profile</span>
-          </button>
+    <main className="dashboard-shell">
+      <header className="topbar animate-fade-in">
+        <Brand />
+        <div className="account-chip">
           <a
-            href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+            href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%2C%20I%20need%20help%20with%20my%20fee%20payment."
             target="_blank"
             rel="noopener noreferrer"
-            className="sidebar-menu-btn sidebar-wa-menu-btn"
-            title="Chat on WhatsApp (+91 87123 03032)"
+            className="topbar-whatsapp-btn"
+            title="WhatsApp Fee Helpline: +91 8712303032"
           >
-            <span className="sidebar-wa-circle-icon" aria-hidden="true">
-              <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
-                <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
-              </svg>
-            </span>
-            <span>WhatsApp</span>
+            <WhatsAppIcon size={16} />
+            <span>+91 8712303032</span>
           </a>
-          <button type="button" className="sidebar-menu-btn logout-btn" onClick={logout}>
-            <span className="menu-icon">🚪</span>
-            <span>Logout</span>
-          </button>
-        </nav>
-      </aside>
-
-      {/* Main Dashboard Panel */}
-      <div className="smart-dashboard-main">
-        {/* Top Header Bar matching Page 3 */}
-        <header className="dashboard-top-navbar animate-fade-in">
-          <div className="topbar-welcome-crumb">
-            <span className="crumb-kicker">STUDENT PORTAL</span>
-            <span className="crumb-title">Siddhartha Institute of Technology & Sciences</span>
+          <div className="avatar">{student.name.charAt(0)}</div>
+          <div>
+            <strong>{student.name}</strong>
+            <small>Student</small>
           </div>
-
-          <div className="topbar-right-actions">
-            {/* Portfolio-Style WhatsApp Circle Button */}
+          <button onClick={logout}>Sign out</button>
+        </div>
+      </header>
+      <div className="dashboard-content">
+        <div className="dashboard-intro-row">
+          <div className="animate-fade-up">
+            <p className="eyebrow">YOUR FEE ACCOUNT</p>
+            <h1>Good to see you, {student.name.split(" ")[0]}.</h1>
+            <p className="muted">Here is the latest overview of your academic fee account.</p>
+          </div>
+          <div className="dashboard-header-actions animate-fade-in">
             <a
-              href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+              href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%2C%20I%20need%20help%20with%20my%20fee%20payment."
               target="_blank"
               rel="noopener noreferrer"
-              className="dashboard-portfolio-wa-circle"
-              title="Chat with SITS Support on WhatsApp (+91 87123 03032)"
-              aria-label="Chat on WhatsApp (+91 87123 03032)"
+              className="whatsapp-header-pill"
+              title="Chat with SITS Fee Accounts on WhatsApp (+91 8712303032)"
             >
-              <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true">
-                <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
-              </svg>
-            </a>
-
-            <div className="notification-bell-btn" title="Notifications">
-              <span className="bell-icon">🔔</span>
-              <span className="notif-dot" />
-            </div>
-
-            <div className="student-profile-chip">
-              <div className="avatar-circle">{student.name.charAt(0)}</div>
-              <div className="student-profile-info">
-                <strong>{student.name}</strong>
-                <small>Student</small>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Welcome Banner matching Page 3 */}
-        <div className="student-hero-banner animate-fade-up">
-          <div className="hero-greeting-col">
-            <h1>Welcome, {student.name} 👋</h1>
-            <p className="student-meta-subtitle">
-              Student ID: <strong className="monospace">{student.student_id}</strong> • <span>B.Tech (CSE)</span> • <span>3rd Year</span>
-            </p>
-          </div>
-
-          <div className="hero-social-col">
-            <a
-              href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="portfolio-circle-badge wa-circle-badge"
-              title="Chat with SITS Support on WhatsApp (+91 87123 03032)"
-            >
-              <span className="badge-circle-icon">
-                <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true">
-                  <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
-                </svg>
+              <span className="wa-icon-circle">
+                <WhatsAppIcon size={18} />
               </span>
-              <span className="badge-circle-label">WhatsApp Helpline</span>
+              <span className="wa-pill-text">
+                WhatsApp Help <strong>+91 8712303032</strong>
+              </span>
             </a>
-          </div>
-        </div>
-
-        {/* 4 Stat Metric Cards matching Page 3 */}
-        <div className="smart-stat-cards-grid animate-fade-up stagger-1">
-          <div className="smart-stat-card card-total-fee">
-            <div className="stat-card-icon icon-blue">💰</div>
-            <div className="stat-card-data">
-              <span className="stat-card-label">Total Fee</span>
-              <strong className="stat-card-val monospace">{currency(student.total_fee)}</strong>
-            </div>
-          </div>
-
-          <div className="smart-stat-card card-paid-amount">
-            <div className="stat-card-icon icon-green">✅</div>
-            <div className="stat-card-data">
-              <span className="stat-card-label">Paid Amount</span>
-              <strong className="stat-card-val monospace text-success">{currency(student.paid_fee)}</strong>
-            </div>
-          </div>
-
-          <div className="smart-stat-card card-pending-amount">
-            <div className="stat-card-icon icon-orange">⚠️</div>
-            <div className="stat-card-data">
-              <span className="stat-card-label">Pending Amount</span>
-              <strong className="stat-card-val monospace text-danger">{currency(student.due_fee + (student.fine_fee || 0))}</strong>
-            </div>
-          </div>
-
-          <div className="smart-stat-card card-due-date">
-            <div className="stat-card-icon icon-purple">📅</div>
-            <div className="stat-card-data">
-              <span className="stat-card-label">Next Due Date</span>
-              <strong className="stat-card-val">30 Sept 2026</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* 2-Column Middle Grid matching Page 3: Payment Status Donut + Recent Transactions Table */}
-        <div className="smart-status-transactions-grid animate-fade-up stagger-2">
-          {/* Left: Payment Status Card with Donut Chart */}
-          <div className="payment-status-card">
-            <div className="status-card-header">
-              <h3>Payment Status</h3>
-              <span className="status-percent-pill">{paidPercent}% Paid</span>
-            </div>
-
-            <div className="donut-status-wrap">
-              <div className="donut-svg-box">
-                <svg width="150" height="150" viewBox="0 0 150 150">
-                  <circle cx="75" cy="75" r="54" fill="transparent" stroke="#f1f5f9" strokeWidth="18" />
-                  <circle
-                    cx="75"
-                    cy="75"
-                    r="54"
-                    fill="transparent"
-                    stroke="#10b981"
-                    strokeWidth="18"
-                    strokeDasharray={2 * Math.PI * 54}
-                    strokeDashoffset={(2 * Math.PI * 54) * (1 - (paidPercent / 100))}
-                    strokeLinecap="round"
-                    transform="rotate(-90 75 75)"
-                  />
-                </svg>
-                <div className="donut-inner-text">
-                  <strong className="donut-percent-num">{paidPercent}%</strong>
-                  <span className="donut-percent-sub">Completed</span>
-                </div>
-              </div>
-
-              <div className="status-legend-col">
-                <div className="status-legend-item">
-                  <span className="status-dot green-dot" />
-                  <div>
-                    <span className="s-name">Paid Fee</span>
-                    <strong className="monospace">{currency(student.paid_fee)}</strong>
-                  </div>
-                </div>
-                <div className="status-legend-item">
-                  <span className="status-dot red-dot" />
-                  <div>
-                    <span className="s-name">Pending Balance</span>
-                    <strong className="monospace">{currency(student.due_fee + (student.fine_fee || 0))}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Recent Transactions Table */}
-          <div className="recent-transactions-card">
-            <div className="transactions-header">
-              <h3>Recent Transactions</h3>
-              <button type="button" className="view-all-link-btn" onClick={() => goToStep(3)}>
-                View All →
-              </button>
-            </div>
-
-            <div className="transactions-table-wrap">
-              <table className="recent-tx-table">
-                <tbody>
-                  {recentTxRows.map((tx, idx) => (
-                    <tr key={idx}>
-                      <td className="tx-date-cell">
-                        <span className="tx-icon">🧾</span>
-                        <span>{tx.date}</span>
-                      </td>
-                      <td className="tx-amount-cell monospace">
-                        {currency(tx.amount)}
-                      </td>
-                      <td className="tx-status-cell text-right">
-                        <span className="tx-paid-pill">Paid</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-content">
-          <div className="dashboard-intro-row">
-            <div className="animate-fade-up">
-              <p className="eyebrow">YOUR FEE ACCOUNT</p>
-              <h2>Step-by-Step Payment & Records</h2>
-              <p className="muted">Follow the guided workflow below to review breakdowns, authorize fees, or print receipts.</p>
-            </div>
             {receipts.length > 0 && (
               <button
                 type="button"
-                className="receipts-header-pill animate-fade-in"
+                className="receipts-header-pill"
                 onClick={() => {
                   goToStep(3);
                 }}
@@ -984,9 +560,10 @@ export default function StudentDashboard() {
               </button>
             )}
           </div>
+        </div>
 
-          {/* Interactive Step-by-Step Stepper Header */}
-          <div className="stepper-header-card animate-fade-up">
+        {/* Interactive Step-by-Step Stepper Header */}
+        <div className="stepper-header-card animate-fade-up">
           <div className="stepper-header-top">
             <div className="stepper-title-area">
               <span className="stepper-kicker">STEP-BY-STEP WORKFLOW</span>
@@ -997,46 +574,23 @@ export default function StudentDashboard() {
                 {activeStep === 4 && "Step 4: AI Fee Advisory & Helpdesk"}
               </h2>
             </div>
-            <div className="stepper-actions-right">
-              <div className="view-mode-toggle">
-                <button
-                  type="button"
-                  className={`mode-toggle-btn ${viewMode === "stepper" ? "active" : ""}`}
-                  onClick={() => setViewMode("stepper")}
-                  title="Focused step-by-step navigation"
-                >
-                  <span>👣 Step-by-Step</span>
-                </button>
-                <button
-                  type="button"
-                  className={`mode-toggle-btn ${viewMode === "all" ? "active" : ""}`}
-                  onClick={() => setViewMode("all")}
-                  title="View all sections together on a single page"
-                >
-                  <span>📄 View All</span>
-                </button>
-              </div>
-
-              {/* Circular WhatsApp Logo Button */}
-              <a
-                href="https://api.whatsapp.com/send?phone=918712303032&text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="stepper-wa-circle-btn"
-                title="Open WhatsApp (+91 8712303032)"
-                aria-label="Direct WhatsApp Chat with SITS Accounts at +91 8712303032"
+            <div className="view-mode-toggle">
+              <button
+                type="button"
+                className={`mode-toggle-btn ${viewMode === "stepper" ? "active" : ""}`}
+                onClick={() => setViewMode("stepper")}
+                title="Focused step-by-step navigation"
               >
-                <span className="wa-circle-pulse-ring" aria-hidden="true" />
-                <svg
-                  viewBox="0 0 32 32"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
-                </svg>
-              </a>
+                <span>👣 Step-by-Step</span>
+              </button>
+              <button
+                type="button"
+                className={`mode-toggle-btn ${viewMode === "all" ? "active" : ""}`}
+                onClick={() => setViewMode("all")}
+                title="View all sections together on a single page"
+              >
+                <span>📄 View All</span>
+              </button>
             </div>
           </div>
 
@@ -1094,24 +648,8 @@ export default function StudentDashboard() {
             )}
             <section className="student-overview">
           <div className="profile-card animate-fade-up stagger-1">
-            <div className="profile-card-header">
-              <div>
-                <div className="card-label">STUDENT DETAILS</div>
-                <h2>{student.name}</h2>
-              </div>
-              <a
-                href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="profile-wa-circle-btn"
-                title="Connect with SITS Accounts on WhatsApp (+91 87123 03032)"
-                aria-label="Connect on WhatsApp"
-              >
-                <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true">
-                  <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
-                </svg>
-              </a>
-            </div>
+            <div className="card-label">STUDENT DETAILS</div>
+            <h2>{student.name}</h2>
             <div className="detail-grid">
               <span>H.T.No <b>{student.student_id}</b></span>
               <span>Email <b>{student.email}</b></span>
@@ -1343,10 +881,7 @@ export default function StudentDashboard() {
                         <div className={`custom-radio ${selectedPaymentMethod === "razorpay" ? "checked" : ""}`}>
                           <div className="radio-dot" />
                         </div>
-                        <div className="method-title-group">
-                          <span className="method-title">Razorpay (UPI / Card / Net Banking)</span>
-                          <span className="rzp-test-tag">⚡ Official Test Gateway Ready</span>
-                        </div>
+                        <span className="method-title">Razorpay (UPI / Card / Net Banking)</span>
                       </div>
                       <div className="method-badges">
                         <RazorpayBadge />
@@ -1411,40 +946,21 @@ export default function StudentDashboard() {
                     </div>
                   </div>
 
-                  {razorpayError && (
-                    <div className="alert-banner alert-warning" style={{ margin: "12px 0 0" }}>
-                      <span>⚠️ {razorpayError}</span>
-                    </div>
-                  )}
-
                   {/* Big Blue Pay Securely Button */}
                   <button
                     type="button"
-                    className={`pay-securely-btn ${razorpayLoading ? "btn-loading" : ""}`}
+                    className="pay-securely-btn"
                     onClick={handlePaySecurely}
-                    disabled={!hasValidAmount || razorpayLoading}
+                    disabled={!hasValidAmount}
                   >
-                    {razorpayLoading ? (
-                      <>
-                        <span className="spinner-icon">⏳</span>
-                        <span>Opening Razorpay Secure Gateway...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="lock-icon" aria-hidden="true">🔒</span>
-                        <span>Pay Securely {hasValidAmount ? currency(numericAmount) : ""}</span>
-                      </>
-                    )}
+                    <span className="lock-icon" aria-hidden="true">🔒</span>
+                    <span>Pay Securely {hasValidAmount ? currency(numericAmount) : ""}</span>
                   </button>
 
                   {/* 256-Bit SSL Encryption Pill */}
                   <div className="payment-security-pill">
                     <span className="security-icon" aria-hidden="true">🛡️</span>
-                    <span>
-                      {selectedPaymentMethod === "razorpay"
-                        ? "Live Razorpay Test Gateway connected (Key: rzp_test_Td0oxwFymxYPOM)."
-                        : "Your payment is secured with 256-bit SSL encryption."}
-                    </span>
+                    <span>Your payment is secured with 256-bit SSL encryption.</span>
                   </div>
 
                   {/* Offline/Manual UTR Claim Link */}
@@ -1507,25 +1023,6 @@ export default function StudentDashboard() {
                   >
                     <span>🧾 Claim Receipt with UTR</span>
                   </button>
-                  <button
-                    type="button"
-                    className="danger-outline-button clear-receipts-btn"
-                    onClick={() => {
-                      if (receipts.length === 0) {
-                        alert("There are no fee receipts to clear yet.");
-                        return;
-                      }
-                      setRevertAllOnClear(true);
-                      setShowClearAllModal(true);
-                    }}
-                    title={receipts.length > 0 ? `Clear all ${receipts.length} stored fee receipts` : "No receipts to clear"}
-                    aria-label="Clear all fee receipts"
-                  >
-                    <span>🗑️ Clear</span>
-                    {receipts.length > 0 && (
-                      <span className="clear-count-tag">({receipts.length})</span>
-                    )}
-                  </button>
                 </div>
               </div>
 
@@ -1555,19 +1052,7 @@ export default function StudentDashboard() {
                           <span className="r-card-badge">Receipt #{receipts.length - idx}</span>
                           <strong className="r-card-id">{r.id}</strong>
                         </div>
-                        <div className="r-card-top-right">
-                          <span className="receipt-status-pill">Verified ✓</span>
-                          <button
-                            type="button"
-                            className="receipt-trash-icon-btn"
-                            onClick={() => promptDeleteReceipt(r)}
-                            title="Delete this fee receipt"
-                            aria-label={`Delete receipt ${r.id}`}
-                          >
-                            <span>🗑️</span>
-                            <span>Delete</span>
-                          </button>
-                        </div>
+                        <span className="receipt-status-pill">Verified ✓</span>
                       </div>
 
                       <div className="r-card-amount-row">
@@ -1602,14 +1087,6 @@ export default function StudentDashboard() {
                           }}
                         >
                           <span>🖨️ View & Print Official Receipt</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="danger-button r-delete-card-btn"
-                          onClick={() => promptDeleteReceipt(r)}
-                          title="Delete this fee receipt"
-                        >
-                          <span>🗑️ Delete</span>
                         </button>
                       </div>
                     </div>
@@ -1694,23 +1171,18 @@ export default function StudentDashboard() {
                   <span className="helpdesk-label">Office Hours</span>
                   <strong>Mon – Sat: 9:00 AM – 4:30 PM (Counter closes at 3:30 PM)</strong>
                 </div>
-                <div className="helpdesk-item helpdesk-wa-highlight">
-                  <span className="helpdesk-label">Instant WhatsApp Helpdesk</span>
-                  <a
-                    href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="helpdesk-wa-link"
-                    title="Chat on WhatsApp (+91 87123 03032)"
-                  >
-                    <span className="helpdesk-wa-circle" aria-hidden="true">
-                      <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
-                        <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
-                      </svg>
-                    </span>
-                    <strong>+91 87123 03032 (Chat Live →)</strong>
-                  </a>
-                </div>
+                <a
+                  href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk%2C%20I%20need%20assistance%20with%20my%20fee%20payment."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="helpdesk-item helpdesk-wa-item"
+                  title="Direct WhatsApp Helpline (+91 8712303032)"
+                >
+                  <span className="helpdesk-label">WhatsApp Helpline</span>
+                  <strong style={{ display: "flex", alignItems: "center", gap: 6, color: "#16a34a" }}>
+                    <WhatsAppIcon size={16} /> +91 8712303032 (Chat Directly)
+                  </strong>
+                </a>
               </div>
             </section>
 
@@ -1969,186 +1441,7 @@ export default function StudentDashboard() {
           receipts={receipts}
           selectedReceiptId={selectedReceiptId}
           onClose={() => setShowReceiptModal(false)}
-          onDeleteReceipt={(r) => {
-            setShowReceiptModal(false);
-            promptDeleteReceipt(r);
-          }}
         />
-      )}
-
-      {/* Delete Single Receipt Confirmation Modal */}
-      {showDeleteModal && receiptToDelete && (
-        <div className="gateway-modal-backdrop animate-fade-in" style={{ zIndex: 3000 }}>
-          <div className="gateway-modal-dialog" style={{ maxWidth: 500, padding: 0 }}>
-            <div className="delete-modal-header">
-              <div className="delete-header-icon-wrap">
-                <span className="delete-warning-icon">🗑️</span>
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 18, color: "#991b1b", fontWeight: 800 }}>
-                  Delete Fee Receipt?
-                </h3>
-                <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#64748b" }}>
-                  Permanently remove this receipt acknowledgement.
-                </p>
-              </div>
-            </div>
-
-            <div className="delete-modal-body" style={{ padding: "20px 24px" }}>
-              <div className="delete-receipt-preview-card">
-                <div className="d-preview-row">
-                  <span className="d-label">Receipt Number</span>
-                  <strong className="d-val monospace" style={{ color: "#0f172a" }}>
-                    {receiptToDelete.id}
-                  </strong>
-                </div>
-                <div className="d-preview-row">
-                  <span className="d-label">Amount Paid</span>
-                  <strong className="d-val" style={{ color: "#059669", fontSize: 16 }}>
-                    {currency(receiptToDelete.amount_paid)}
-                  </strong>
-                </div>
-                <div className="d-preview-row">
-                  <span className="d-label">Payment Mode</span>
-                  <span className="d-val font-semibold">{receiptToDelete.payment_mode}</span>
-                </div>
-                {receiptToDelete.utr_number && (
-                  <div className="d-preview-row">
-                    <span className="d-label">UTR / Ref No</span>
-                    <code className="monospace">{receiptToDelete.utr_number}</code>
-                  </div>
-                )}
-                <div className="d-preview-row">
-                  <span className="d-label">Date & Time</span>
-                  <span>{new Date(receiptToDelete.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
-                </div>
-              </div>
-
-              {/* Revert balance checkbox option */}
-              <label className="delete-revert-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={revertBalanceOnDelete}
-                  onChange={(e) => setRevertBalanceOnDelete(e.target.checked)}
-                  className="custom-calc-checkbox"
-                />
-                <div>
-                  <strong style={{ display: "block", color: "#0f172a", fontSize: 13.5 }}>
-                    Restore {currency(receiptToDelete.amount_paid)} back to Due Balance
-                  </strong>
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    Reverses this payment from your account and restores your pending fee balance.
-                  </span>
-                </div>
-              </label>
-
-              <div className="delete-warning-pill">
-                <span>⚠️</span>
-                <span>This action cannot be undone once confirmed.</span>
-              </div>
-            </div>
-
-            <div className="delete-modal-actions" style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 12 }}>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setReceiptToDelete(null);
-                }}
-                disabled={deletingReceipt}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="danger-button confirm-delete-btn"
-                onClick={handleConfirmDelete}
-                disabled={deletingReceipt}
-              >
-                {deletingReceipt ? (
-                  <span>Deleting...</span>
-                ) : (
-                  <span>🗑️ Delete Receipt</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Clear All Receipts Confirmation Modal */}
-      {showClearAllModal && (
-        <div className="gateway-modal-backdrop animate-fade-in" style={{ zIndex: 3000 }}>
-          <div className="gateway-modal-dialog" style={{ maxWidth: 500, padding: 0 }}>
-            <div className="delete-modal-header">
-              <div className="delete-header-icon-wrap">
-                <span className="delete-warning-icon">🗑️</span>
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 18, color: "#991b1b", fontWeight: 800 }}>
-                  Clear All {receipts.length} Fee Receipts?
-                </h3>
-                <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#64748b" }}>
-                  Delete all archived receipt records from your dashboard.
-                </p>
-              </div>
-            </div>
-
-            <div className="delete-modal-body" style={{ padding: "20px 24px" }}>
-              <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#334155" }}>
-                You currently have <strong>{receipts.length}</strong> archived receipt{receipts.length > 1 ? "s" : ""} totaling{" "}
-                <strong>{currency(receipts.reduce((acc, r) => acc + r.amount_paid, 0))}</strong>.
-              </p>
-
-              {/* Revert balance checkbox option */}
-              <label className="delete-revert-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={revertAllOnClear}
-                  onChange={(e) => setRevertAllOnClear(e.target.checked)}
-                  className="custom-calc-checkbox"
-                />
-                <div>
-                  <strong style={{ display: "block", color: "#0f172a", fontSize: 13.5 }}>
-                    Restore all payment amounts back to Due Balance
-                  </strong>
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    Resets pending fee and paid fee as if these payments were not recorded.
-                  </span>
-                </div>
-              </label>
-
-              <div className="delete-warning-pill">
-                <span>⚠️</span>
-                <span>All {receipts.length} receipts will be permanently removed.</span>
-              </div>
-            </div>
-
-            <div className="delete-modal-actions" style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 12 }}>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setShowClearAllModal(false)}
-                disabled={clearingAllReceipts}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="danger-button confirm-delete-btn"
-                onClick={handleConfirmClearAll}
-                disabled={clearingAllReceipts}
-              >
-                {clearingAllReceipts ? (
-                  <span>Clearing Receipts...</span>
-                ) : (
-                  <span>🗑️ Clear All Receipts</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* SITS Unified Multi-Option Payment Gateway Modal */}
@@ -2164,8 +1457,7 @@ export default function StudentDashboard() {
         genericUpiUri={genericUpiUri}
         onPaymentSuccess={handleGatewayPaymentSuccess}
       />
-      </div>
-    </div>
+    </main>
   );
 }
 

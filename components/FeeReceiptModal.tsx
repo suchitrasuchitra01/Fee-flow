@@ -10,14 +10,12 @@ type FeeReceiptModalProps = {
   receipts: FeeReceipt[];
   selectedReceiptId?: string;
   onClose: () => void;
-  onDeleteReceipt?: (receipt: FeeReceipt) => void;
 };
 
 export default function FeeReceiptModal({
   receipts,
   selectedReceiptId,
   onClose,
-  onDeleteReceipt,
 }: FeeReceiptModalProps) {
   const [activeId, setActiveId] = useState<string>(
     selectedReceiptId || (receipts.length > 0 ? receipts[0].id : "")
@@ -102,21 +100,6 @@ Status: PAID & VERIFIED
             >
               🖨️ Print / Save PDF
             </button>
-            {onDeleteReceipt && (
-              <button
-                type="button"
-                className="receipt-action-btn danger"
-                onClick={() => onDeleteReceipt(currentReceipt)}
-                title="Delete this fee receipt"
-                style={{
-                  background: "#fee2e2",
-                  color: "#dc2626",
-                  border: "1.5px solid #fecaca",
-                }}
-              >
-                🗑️ Delete
-              </button>
-            )}
             <button
               type="button"
               className="receipt-modal-close"
