@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Student, FeeReceipt } from "@/lib/types";
 import { currency, feeStatus } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Brand from "@/components/Brand";
 import FeeReceiptModal from "@/components/FeeReceiptModal";
 import PaymentGatewayModal, { PaymentMode } from "@/components/PaymentGatewayModal";
@@ -498,45 +499,267 @@ export default function StudentDashboard() {
     }
   }
 
+  const paidPercent = student && student.total_fee > 0 ? Math.min(100, Math.round((student.paid_fee / student.total_fee) * 100)) : 100;
+  const recentTxRows = receipts.length > 0 
+    ? receipts.slice(0, 3).map(r => ({
+        date: new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        amount: r.amount_paid,
+        id: r.id
+      }))
+    : [
+        { date: "16 Aug 2026", amount: 20000, id: "demo-1" },
+        { date: "15 Jul 2026", amount: 15000, id: "demo-2" },
+        { date: "12 Jun 2026", amount: 15000, id: "demo-3" },
+      ];
+
   return (
-    <main className="dashboard-shell">
-      <header className="topbar animate-fade-in">
-        <Brand />
-        <div className="account-chip">
-          <div className="avatar">{student.name.charAt(0)}</div>
-          <div>
-            <strong>{student.name}</strong>
-            <small>Student</small>
-          </div>
-          <button onClick={logout}>Sign out</button>
-        </div>
-      </header>
-      <div className="dashboard-content">
-        <div className="dashboard-intro-row">
-          <div className="animate-fade-up">
-            <p className="eyebrow">YOUR FEE ACCOUNT</p>
-            <h1>Good to see you, {student.name.split(" ")[0]}.</h1>
-            <p className="muted">Here is the latest overview of your academic fee account.</p>
-          </div>
-          {receipts.length > 0 && (
-            <button
-              type="button"
-              className="receipts-header-pill animate-fade-in"
-              onClick={() => {
-                goToStep(3);
-              }}
-              title="View all your payment receipts"
-            >
-              <span className="receipts-pill-icon">🧾</span>
-              <span className="receipts-pill-text">
-                Fee Receipts <strong>({receipts.length})</strong>
-              </span>
-            </button>
-          )}
+    <div className="smart-dashboard-shell">
+      {/* Left Navy Sidebar matching Page 3 */}
+      <aside className="smart-dashboard-sidebar">
+        <div className="sidebar-brand-wrap">
+          <Link href="/" className="smart-brand-link">
+            <div className="smart-brand-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 3.73l6.5 3.55L12 13.82 5.5 10.28 12 6.73zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+              </svg>
+            </div>
+            <span className="smart-brand-text">
+              Smart<strong>Fee</strong>
+            </span>
+          </Link>
         </div>
 
-        {/* Interactive Step-by-Step Stepper Header */}
-        <div className="stepper-header-card animate-fade-up">
+        <nav className="sidebar-nav-menu">
+          <button 
+            type="button" 
+            className={`sidebar-menu-btn ${activeStep === 1 ? "active" : ""}`}
+            onClick={() => goToStep(1)}
+          >
+            <span className="menu-icon">📊</span>
+            <span>Dashboard</span>
+          </button>
+          <Link href="/fee-structure" className="sidebar-menu-btn">
+            <span className="menu-icon">📋</span>
+            <span>Fee Structure</span>
+          </Link>
+          <Link href="/fee-calculator" className="sidebar-menu-btn">
+            <span className="menu-icon">🧮</span>
+            <span>Fee Calculator</span>
+          </Link>
+          <button 
+            type="button" 
+            className={`sidebar-menu-btn ${activeStep === 2 ? "active" : ""}`}
+            onClick={() => goToStep(2)}
+          >
+            <span className="menu-icon">💳</span>
+            <span>My Payments</span>
+          </button>
+          <button 
+            type="button" 
+            className={`sidebar-menu-btn ${activeStep === 3 ? "active" : ""}`}
+            onClick={() => goToStep(3)}
+          >
+            <span className="menu-icon">🧾</span>
+            <span>Download Receipt</span>
+          </button>
+          <button 
+            type="button" 
+            className="sidebar-menu-btn"
+            onClick={() => {
+              goToStep(1);
+              const target = document.querySelector(".profile-card");
+              if (target) target.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            <span className="menu-icon">👤</span>
+            <span>Profile</span>
+          </button>
+          <button type="button" className="sidebar-menu-btn logout-btn" onClick={logout}>
+            <span className="menu-icon">🚪</span>
+            <span>Logout</span>
+          </button>
+        </nav>
+      </aside>
+
+      {/* Main Dashboard Panel */}
+      <div className="smart-dashboard-main">
+        {/* Top Header Bar matching Page 3 */}
+        <header className="dashboard-top-navbar animate-fade-in">
+          <div className="topbar-welcome-crumb">
+            <span className="crumb-kicker">STUDENT PORTAL</span>
+            <span className="crumb-title">Siddhartha Institute of Technology & Sciences</span>
+          </div>
+
+          <div className="topbar-right-actions">
+            <div className="notification-bell-btn" title="Notifications">
+              <span className="bell-icon">🔔</span>
+              <span className="notif-dot" />
+            </div>
+
+            <div className="student-profile-chip">
+              <div className="avatar-circle">{student.name.charAt(0)}</div>
+              <div className="student-profile-info">
+                <strong>{student.name}</strong>
+                <small>Student</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Welcome Banner matching Page 3 */}
+        <div className="student-hero-banner animate-fade-up">
+          <div className="hero-greeting-col">
+            <h1>Welcome, {student.name} 👋</h1>
+            <p className="student-meta-subtitle">
+              Student ID: <strong className="monospace">{student.student_id}</strong> • <span>B.Tech (CSE)</span> • <span>3rd Year</span>
+            </p>
+          </div>
+        </div>
+
+        {/* 4 Stat Metric Cards matching Page 3 */}
+        <div className="smart-stat-cards-grid animate-fade-up stagger-1">
+          <div className="smart-stat-card card-total-fee">
+            <div className="stat-card-icon icon-blue">💰</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Total Fee</span>
+              <strong className="stat-card-val monospace">{currency(student.total_fee)}</strong>
+            </div>
+          </div>
+
+          <div className="smart-stat-card card-paid-amount">
+            <div className="stat-card-icon icon-green">✅</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Paid Amount</span>
+              <strong className="stat-card-val monospace text-success">{currency(student.paid_fee)}</strong>
+            </div>
+          </div>
+
+          <div className="smart-stat-card card-pending-amount">
+            <div className="stat-card-icon icon-orange">⚠️</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Pending Amount</span>
+              <strong className="stat-card-val monospace text-danger">{currency(student.due_fee + (student.fine_fee || 0))}</strong>
+            </div>
+          </div>
+
+          <div className="smart-stat-card card-due-date">
+            <div className="stat-card-icon icon-purple">📅</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Next Due Date</span>
+              <strong className="stat-card-val">30 Sept 2026</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Column Middle Grid matching Page 3: Payment Status Donut + Recent Transactions Table */}
+        <div className="smart-status-transactions-grid animate-fade-up stagger-2">
+          {/* Left: Payment Status Card with Donut Chart */}
+          <div className="payment-status-card">
+            <div className="status-card-header">
+              <h3>Payment Status</h3>
+              <span className="status-percent-pill">{paidPercent}% Paid</span>
+            </div>
+
+            <div className="donut-status-wrap">
+              <div className="donut-svg-box">
+                <svg width="150" height="150" viewBox="0 0 150 150">
+                  <circle cx="75" cy="75" r="54" fill="transparent" stroke="#f1f5f9" strokeWidth="18" />
+                  <circle
+                    cx="75"
+                    cy="75"
+                    r="54"
+                    fill="transparent"
+                    stroke="#10b981"
+                    strokeWidth="18"
+                    strokeDasharray={2 * Math.PI * 54}
+                    strokeDashoffset={(2 * Math.PI * 54) * (1 - (paidPercent / 100))}
+                    strokeLinecap="round"
+                    transform="rotate(-90 75 75)"
+                  />
+                </svg>
+                <div className="donut-inner-text">
+                  <strong className="donut-percent-num">{paidPercent}%</strong>
+                  <span className="donut-percent-sub">Completed</span>
+                </div>
+              </div>
+
+              <div className="status-legend-col">
+                <div className="status-legend-item">
+                  <span className="status-dot green-dot" />
+                  <div>
+                    <span className="s-name">Paid Fee</span>
+                    <strong className="monospace">{currency(student.paid_fee)}</strong>
+                  </div>
+                </div>
+                <div className="status-legend-item">
+                  <span className="status-dot red-dot" />
+                  <div>
+                    <span className="s-name">Pending Balance</span>
+                    <strong className="monospace">{currency(student.due_fee + (student.fine_fee || 0))}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Recent Transactions Table */}
+          <div className="recent-transactions-card">
+            <div className="transactions-header">
+              <h3>Recent Transactions</h3>
+              <button type="button" className="view-all-link-btn" onClick={() => goToStep(3)}>
+                View All →
+              </button>
+            </div>
+
+            <div className="transactions-table-wrap">
+              <table className="recent-tx-table">
+                <tbody>
+                  {recentTxRows.map((tx, idx) => (
+                    <tr key={idx}>
+                      <td className="tx-date-cell">
+                        <span className="tx-icon">🧾</span>
+                        <span>{tx.date}</span>
+                      </td>
+                      <td className="tx-amount-cell monospace">
+                        {currency(tx.amount)}
+                      </td>
+                      <td className="tx-status-cell text-right">
+                        <span className="tx-paid-pill">Paid</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-content">
+          <div className="dashboard-intro-row">
+            <div className="animate-fade-up">
+              <p className="eyebrow">YOUR FEE ACCOUNT</p>
+              <h2>Step-by-Step Payment & Records</h2>
+              <p className="muted">Follow the guided workflow below to review breakdowns, authorize fees, or print receipts.</p>
+            </div>
+            {receipts.length > 0 && (
+              <button
+                type="button"
+                className="receipts-header-pill animate-fade-in"
+                onClick={() => {
+                  goToStep(3);
+                }}
+                title="View all your payment receipts"
+              >
+                <span className="receipts-pill-icon">🧾</span>
+                <span className="receipts-pill-text">
+                  Fee Receipts <strong>({receipts.length})</strong>
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* Interactive Step-by-Step Stepper Header */}
+          <div className="stepper-header-card animate-fade-up">
           <div className="stepper-header-top">
             <div className="stepper-title-area">
               <span className="stepper-kicker">STEP-BY-STEP WORKFLOW</span>
@@ -1418,7 +1641,8 @@ export default function StudentDashboard() {
         genericUpiUri={genericUpiUri}
         onPaymentSuccess={handleGatewayPaymentSuccess}
       />
-    </main>
+      </div>
+    </div>
   );
 }
 

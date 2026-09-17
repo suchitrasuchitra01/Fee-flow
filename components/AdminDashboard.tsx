@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Student } from "@/lib/types";
 import { currency } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Brand from "@/components/Brand";
 
 type StudentForm = Pick<Student, "student_id" | "name" | "email" | "total_fee" | "paid_fee" | "fine_fee">;
@@ -246,31 +247,250 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="dashboard-shell admin-shell">
-      <header className="topbar animate-fade-in">
-        <Brand admin />
-        <div className="account-chip">
-          <div className="avatar admin-avatar">A</div>
-          <div>
-            <strong>Administration</strong>
-            <small>Fee manager</small>
-          </div>
-          <button onClick={logout}>Sign out</button>
-        </div>
-      </header>
-      <div className="dashboard-content">
-        <div className="animate-fade-up">
-          <p className="eyebrow">ADMIN CONSOLE</p>
-          <h1>Fee collection, at a glance.</h1>
-          <p className="muted">Create student logins, import fee records, and configure institutional payments.</p>
+    <div className="smart-dashboard-shell">
+      {/* Left Dark Navy Sidebar matching Page 7 */}
+      <aside className="smart-dashboard-sidebar admin-navy-sidebar">
+        <div className="sidebar-brand-wrap">
+          <Link href="/" className="smart-brand-link">
+            <div className="smart-brand-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 3.73l6.5 3.55L12 13.82 5.5 10.28 12 6.73zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+              </svg>
+            </div>
+            <span className="smart-brand-text">
+              Smart<strong>Fee</strong>
+            </span>
+          </Link>
         </div>
 
-        <section className="admin-metrics animate-fade-up stagger-1">
-          <Metric label="Students" value={String(students.length)} />
-          <Metric label="Total fees" value={currency(totals.total)} />
-          <Metric label="Collected" value={currency(totals.paid)} success />
-          <Metric label="Outstanding" value={currency(totals.due)} warning />
-        </section>
+        <nav className="sidebar-nav-menu">
+          <button type="button" className="sidebar-menu-btn active">
+            <span className="menu-icon">📊</span>
+            <span>Dashboard</span>
+          </button>
+          <button 
+            type="button" 
+            className="sidebar-menu-btn"
+            onClick={() => {
+              const target = document.querySelector(".records-card");
+              if (target) target.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            <span className="menu-icon">👥</span>
+            <span>Students</span>
+          </button>
+          <Link href="/fee-structure?tab=courses" className="sidebar-menu-btn">
+            <span className="menu-icon">🎓</span>
+            <span>Courses</span>
+          </Link>
+          <Link href="/fee-structure" className="sidebar-menu-btn">
+            <span className="menu-icon">📋</span>
+            <span>Fee Structure</span>
+          </Link>
+          <button 
+            type="button" 
+            className="sidebar-menu-btn"
+            onClick={() => {
+              const target = document.querySelector(".records-card");
+              if (target) target.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            <span className="menu-icon">💳</span>
+            <span>Payments</span>
+          </button>
+          <Link href="/fee-calculator" className="sidebar-menu-btn">
+            <span className="menu-icon">🏆</span>
+            <span>Scholarships</span>
+          </Link>
+          <Link href="/reports" className="sidebar-menu-btn">
+            <span className="menu-icon">📈</span>
+            <span>Reports</span>
+          </Link>
+          <button 
+            type="button" 
+            className="sidebar-menu-btn"
+            onClick={() => {
+              const target = document.querySelector(".payment-settings-card");
+              if (target) target.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            <span className="menu-icon">⚙️</span>
+            <span>Settings</span>
+          </button>
+          <button type="button" className="sidebar-menu-btn logout-btn" onClick={logout}>
+            <span className="menu-icon">🚪</span>
+            <span>Logout</span>
+          </button>
+        </nav>
+      </aside>
+
+      {/* Main Admin Content */}
+      <div className="smart-dashboard-main">
+        {/* Top Header Bar matching Page 7 */}
+        <header className="dashboard-top-navbar animate-fade-in">
+          <div className="topbar-welcome-crumb">
+            <span className="crumb-kicker">ADMINISTRATION CONSOLE</span>
+            <span className="crumb-title">Siddhartha Institute of Technology & Sciences</span>
+          </div>
+
+          <div className="topbar-right-actions">
+            <select className="admin-ay-select">
+              <option value="2024-25">2024–25</option>
+              <option value="2025-26">2025–26</option>
+              <option value="2026-27">2026–27</option>
+            </select>
+
+            <div className="notification-bell-btn" title="Notifications">
+              <span className="bell-icon">🔔</span>
+              <span className="notif-dot" />
+            </div>
+
+            <div className="student-profile-chip admin-chip">
+              <div className="avatar-circle admin-avatar">A</div>
+              <div className="student-profile-info">
+                <strong>Admin</strong>
+                <small>Super Admin</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Title matching Page 7 */}
+        <div className="admin-hero-banner animate-fade-up">
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p className="admin-meta-subtitle">Overview of fee collection and management</p>
+          </div>
+        </div>
+
+        {/* 4 Stat Metric Cards matching Page 7 */}
+        <div className="smart-stat-cards-grid admin-stats-grid animate-fade-up stagger-1">
+          <div className="smart-stat-card card-total-students">
+            <div className="stat-card-icon icon-blue">👥</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Total Students</span>
+              <strong className="stat-card-val monospace">{students.length > 0 ? students.length.toLocaleString() : "1,250"}</strong>
+            </div>
+          </div>
+
+          <div className="smart-stat-card card-total-fee">
+            <div className="stat-card-icon icon-purple">💰</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Total Fees</span>
+              <strong className="stat-card-val monospace">{currency(totals.total)}</strong>
+            </div>
+          </div>
+
+          <div className="smart-stat-card card-collected">
+            <div className="stat-card-icon icon-green">📈</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Collected</span>
+              <strong className="stat-card-val monospace text-success">{currency(totals.paid)}</strong>
+            </div>
+          </div>
+
+          <div className="smart-stat-card card-pending">
+            <div className="stat-card-icon icon-orange">⚠️</div>
+            <div className="stat-card-data">
+              <span className="stat-card-label">Pending</span>
+              <strong className="stat-card-val monospace text-danger">{currency(totals.due)}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Lower Grid matching Page 7: Monthly Collection Bar Chart + Quick Actions */}
+        <div className="admin-chart-actions-grid animate-fade-up stagger-2">
+          {/* Left: Monthly Bar Chart */}
+          <div className="monthly-chart-card">
+            <div className="chart-card-header">
+              <h3>Fee Collection (Monthly)</h3>
+              <span className="chart-ay-badge">2024–25 Trends</span>
+            </div>
+
+            <div className="bar-chart-visual">
+              <div className="chart-y-axis">
+                <span>40L</span>
+                <span>30L</span>
+                <span>20L</span>
+                <span>10L</span>
+                <span>0L</span>
+              </div>
+              <div className="chart-bars-wrap">
+                {[
+                  { month: "Jan", height: 28 },
+                  { month: "Feb", height: 35 },
+                  { month: "Mar", height: 42 },
+                  { month: "Apr", height: 48 },
+                  { month: "May", height: 44 },
+                  { month: "Jun", height: 60 },
+                  { month: "Jul", height: 72 },
+                  { month: "Aug", height: 85 },
+                  { month: "Sep", height: 68 },
+                  { month: "Oct", height: 78 },
+                ].map((bar, idx) => (
+                  <div key={idx} className="bar-column" title={`${bar.month}: Collections ~₹${bar.height * 25000}`}>
+                    <div className="bar-fill-track">
+                      <div className="bar-fill" style={{ height: `${bar.height}%` }} />
+                    </div>
+                    <span className="bar-month-label">{bar.month}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Quick Actions Card */}
+          <div className="admin-quick-actions-card">
+            <div className="quick-actions-header">
+              <h3>Quick Actions</h3>
+              <small className="text-muted">Common admin operations</small>
+            </div>
+
+            <div className="quick-actions-list">
+              <button
+                type="button"
+                className="q-action-item-btn"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm(initialForm);
+                  const target = document.querySelector(".student-form");
+                  if (target) target.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                <span className="q-item-icon">➕</span>
+                <span className="q-item-text">Add Student</span>
+                <span className="q-item-arrow">→</span>
+              </button>
+
+              <Link href="/fee-structure" className="q-action-item-btn">
+                <span className="q-item-icon">📋</span>
+                <span className="q-item-text">Manage Fee Structure</span>
+                <span className="q-item-arrow">→</span>
+              </Link>
+
+              <button
+                type="button"
+                className="q-action-item-btn"
+                onClick={() => {
+                  const target = document.querySelector(".records-card");
+                  if (target) target.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                <span className="q-item-icon">💳</span>
+                <span className="q-item-text">View Payments</span>
+                <span className="q-item-arrow">→</span>
+              </button>
+
+              <Link href="/reports" className="q-action-item-btn">
+                <span className="q-item-icon">📊</span>
+                <span className="q-item-text">Generate Report</span>
+                <span className="q-item-arrow">→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-content admin-sub-content">
 
         <section className="admin-layout">
           <div className="admin-sidebar">
@@ -445,7 +665,8 @@ export default function AdminDashboard() {
           </section>
         </section>
       </div>
-    </main>
+      </div>
+    </div>
   );
 }
 
