@@ -79,16 +79,13 @@ export default function Navbar({ activePage }: { activePage?: string }) {
 
         {/* Action Button / Profile */}
         <div className="smart-nav-actions">
-          {userRole ? (
-            <div className="user-profile-badge" onClick={() => router.push(userRole === "admin" ? "/admin" : "/student")}>
-              <span className="avatar-circle">{userInitial}</span>
-              <span className="portal-quick-link">{userRole === "admin" ? "Admin Portal" : "Student Portal"}</span>
-            </div>
-          ) : (
-            <Link href="/login" className="smart-login-btn">
-              Login
-            </Link>
-          )}
+          <Link
+            href={userRole === "admin" ? "/admin" : (userRole === "student" ? "/student" : "/student")}
+            className="user-avatar-btn"
+            title={userRole === "admin" ? "Admin Portal" : "Student Portal"}
+          >
+            <span className="avatar-circle">{userInitial || "R"}</span>
+          </Link>
 
           {/* Mobile Menu Toggle */}
           <button 
@@ -128,3 +125,4 @@ export default function Navbar({ activePage }: { activePage?: string }) {
     </header>
   );
 }
+

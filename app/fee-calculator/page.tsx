@@ -1,25 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { currency } from "@/lib/utils";
 
 type CalculatorItem = {
   id: string;
   label: string;
   amount: number;
-  isBase?: boolean;
 };
 
 export default function FeeCalculatorPage() {
   const router = useRouter();
 
-  // Facility Options matching Page 5
-  const [items, setItems] = useState<CalculatorItem[]>([
-    { id: "tuition", label: "Tuition Fee", amount: 60000, isBase: true },
+  // Facility Options matching Page 5 in media_1789625536061.png
+  const [items] = useState<CalculatorItem[]>([
+    { id: "tuition", label: "Tuition Fee", amount: 60000 },
     { id: "hostel", label: "Hostel Fee", amount: 30000 },
     { id: "transport", label: "Transport Fee", amount: 10000 },
     { id: "exam", label: "Examination Fee", amount: 5000 },
@@ -27,7 +24,7 @@ export default function FeeCalculatorPage() {
     { id: "lab", label: "Laboratory Fee", amount: 3000 },
   ]);
 
-  // Selected item IDs (default checked as in mockup)
+  // Selected item IDs (all 6 checked by default as in reference design)
   const [selectedIds, setSelectedIds] = useState<string[]>([
     "tuition",
     "hostel",
@@ -37,11 +34,10 @@ export default function FeeCalculatorPage() {
     "lab",
   ]);
 
-  // Scholarship Selection
+  // Scholarship Selection (defaults to 25% Merit Scholarship as in reference design)
   const [scholarshipPercent, setScholarshipPercent] = useState<number>(25);
 
   function toggleItem(id: string) {
-    if (id === "tuition") return; // Tuition is mandatory base
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
@@ -60,128 +56,159 @@ export default function FeeCalculatorPage() {
   }
 
   return (
-    <div className="smart-page-wrapper">
+    <div className="fee-calc-page-wrapper">
       <Navbar activePage="/fee-calculator" />
 
-      <main className="smart-content-page">
-        <div className="content-page-header">
-          <div className="header-breadcrumbs">
-            <Link href="/">Home</Link> <span>›</span> <strong>Fee Calculator</strong>
-          </div>
-          <h1>Fee Calculator</h1>
-          <p className="page-desc">
-            Calculate your total fee with optional facilities, hostel accommodation, and merit discounts.
+      <main className="fee-calc-main-container">
+        {/* Page Header matching reference */}
+        <div className="fee-calc-header animate-fade-down">
+          <h1 className="fee-calc-title">Fee Calculator</h1>
+          <p className="fee-calc-subtitle">
+            Calculate your total fee with optional facilities and discounts
           </p>
         </div>
 
-        {/* 2-Column Calculator Grid matching Page 5 */}
-        <div className="calculator-layout-grid animate-fade-up">
-          {/* Left Card: Checkbox List & Scholarship Select */}
-          <div className="calc-facilities-card">
-            <div className="calc-card-header">
-              <h3>Select Facilities & Optional Fees</h3>
-              <span className="calc-header-badge">Step 1 of 2</span>
-            </div>
-
-            <div className="calc-items-list">
+        {/* 2-Column Calculator Cards Grid */}
+        <div className="fee-calc-cards-grid animate-fade-up">
+          {/* Left Card: Checklist & Scholarship Dropdown */}
+          <div className="fee-calc-card fee-calc-left-card">
+            <div className="fee-calc-checklist">
               {items.map((item) => {
                 const isChecked = selectedIds.includes(item.id);
                 return (
-                  <label
+                  <div
                     key={item.id}
-                    className={`calc-item-row ${isChecked ? "selected" : ""}`}
+                    className="fee-calc-row"
+                    onClick={() => toggleItem(item.id)}
+                    role="checkbox"
+                    aria-checked={isChecked}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        toggleItem(item.id);
+                      }
+                    }}
                   >
-                    <div className="calc-item-left">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        disabled={item.isBase}
-                        onChange={() => toggleItem(item.id)}
-                        className="custom-calc-checkbox"
-                      />
-                      <span className="calc-item-label">{item.label}</span>
-                      {item.isBase && <span className="calc-base-tag">Mandatory</span>}
+                    <div className="fee-calc-item-left">
+                      <div className={`fee-calc-checkbox ${isChecked ? "checked" : ""}`}>
+                        {isChecked && (
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#ffffff"
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="fee-calc-item-label">{item.label}</span>
                     </div>
-                    <span className="calc-item-amount monospace">
-                      {currency(item.amount)}
+                    <span className="fee-calc-item-amount">
+                      {item.amount.toLocaleString("en-IN")}
                     </span>
-                  </label>
+                  </div>
                 );
               })}
             </div>
 
             {/* Scholarship / Discount Dropdown */}
-            <div className="scholarship-selector-box">
-              <label>Scholarship / Discount Waiver</label>
-              <div className="select-wrapper">
+            <div className="fee-calc-scholarship-section">
+              <label htmlFor="scholarship-select" className="fee-calc-scholarship-label">
+                Scholarship / Discount
+              </label>
+              <div className="fee-calc-select-wrap">
                 <select
+                  id="scholarship-select"
                   value={scholarshipPercent}
                   onChange={(e) => setScholarshipPercent(Number(e.target.value))}
-                  className="scholarship-select"
+                  className="fee-calc-select"
                 >
-                  <option value={0}>None (0%) — Full Regular Tariff</option>
-                  <option value={10}>10% — Academic Merit (GPA &gt; 8.5)</option>
-                  <option value={25}>25% — Merit Scholarship (Entrance Rank &lt; 5000)</option>
-                  <option value={35}>35% — Special Talent / Sports Excellence</option>
-                  <option value={50}>50% — Institutional Concession / Merit Quota</option>
+                  <option value={0}>0% - No Scholarship</option>
+                  <option value={10}>10% - Academic Merit</option>
+                  <option value={25}>25% - Merit Scholarship</option>
+                  <option value={35}>35% - Sports Excellence</option>
+                  <option value={50}>50% - Institutional Concession</option>
                 </select>
+                <div className="fee-calc-select-chevron">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#475569"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Card: Fee Summary matching Page 5 */}
-          <div className="calc-summary-card">
-            <div className="summary-card-inner">
-              <h3>Fee Summary</h3>
-              <p className="summary-caption">Real-time calculated fee quotation</p>
+          {/* Right Card: Fee Summary */}
+          <div className="fee-calc-card fee-calc-right-card">
+            <h2 className="fee-calc-summary-title">Fee Summary</h2>
 
-              <div className="summary-breakdown-table">
-                <div className="summary-row">
-                  <span className="summary-row-label">Subtotal</span>
-                  <strong className="summary-row-val monospace">
-                    {currency(subtotal)}
-                  </strong>
-                </div>
+            <div className="fee-calc-summary-rows">
+              {/* Subtotal */}
+              <div className="fee-calc-summary-row">
+                <span className="fee-calc-row-name">Subtotal</span>
+                <span className="fee-calc-row-num">
+                  ₹{subtotal.toLocaleString("en-IN")}
+                </span>
+              </div>
 
-                {scholarshipPercent > 0 && (
-                  <div className="summary-row discount-row">
-                    <span className="summary-row-label">
-                      Scholarship ({scholarshipPercent}%)
-                    </span>
-                    <strong className="summary-row-val discount-amount monospace">
-                      - {currency(discountAmount)}
-                    </strong>
-                  </div>
-                )}
-
-                <div className="summary-divider" />
-
-                <div className="summary-total-row">
-                  <div>
-                    <span className="total-label">Total Amount</span>
-                    <small className="block text-muted">Payable for selected semester</small>
-                  </div>
-                  <span className="total-amount-highlight monospace">
-                    {currency(totalAmount)}
+              {/* Scholarship */}
+              {scholarshipPercent > 0 && (
+                <div className="fee-calc-summary-row discount-green">
+                  <span className="fee-calc-row-name">
+                    Scholarship ({scholarshipPercent}%)
+                  </span>
+                  <span className="fee-calc-row-num">
+                    - ₹{discountAmount.toLocaleString("en-IN")}
                   </span>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Proceed to Pay Action Button */}
-              <button
-                type="button"
-                onClick={handleProceedToPay}
-                className="proceed-to-pay-btn"
-              >
-                <span>Proceed to Pay</span>
-                <span className="btn-arrow" aria-hidden="true">→</span>
-              </button>
+            {/* Highlighted Total Amount Box */}
+            <div className="fee-calc-total-box">
+              <span className="fee-calc-total-label">Total Amount</span>
+              <span className="fee-calc-total-val">
+                ₹{totalAmount.toLocaleString("en-IN")}
+              </span>
+            </div>
 
-              {/* Info Pill */}
-              <div className="calc-disclaimer-pill">
-                <span className="pill-info-icon">ℹ️</span>
-                <p>This is an estimated amount. Final amount may vary as per institute rules.</p>
+            {/* Proceed to Pay Button */}
+            <button
+              type="button"
+              onClick={handleProceedToPay}
+              className="fee-calc-pay-btn"
+            >
+              <span>Proceed to Pay</span>
+              <span className="fee-calc-pay-arrow" aria-hidden="true">→</span>
+            </button>
+
+            {/* Estimated Notice Pill */}
+            <div className="fee-calc-notice-box">
+              <div className="fee-calc-notice-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="#2563eb" strokeWidth="2" />
+                  <line x1="12" y1="16" x2="12" y2="11" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="12" cy="7.5" r="1.1" fill="#2563eb" />
+                </svg>
               </div>
+              <p className="fee-calc-notice-text">
+                This is an estimated amount. Final amount may vary as per institute rules.
+              </p>
             </div>
           </div>
         </div>
