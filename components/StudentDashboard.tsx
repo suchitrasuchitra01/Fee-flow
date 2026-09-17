@@ -502,7 +502,8 @@ export default function StudentDashboard() {
   return (
     <main className="dashboard-shell">
       <header className="topbar animate-fade-in">
-        <Brand />
+        <Brand onlyName />
+        <Brand onlyLogo />
         <div className="account-chip">
           <a
             href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%2C%20I%20need%20help%20with%20my%20fee%20payment."

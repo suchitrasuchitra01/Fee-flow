@@ -573,39 +573,61 @@ button { cursor: pointer; }
   transition: all 0.25s ease;
 }
 
-/* Center & Enlarge Brand Logo */
-.topbar .brand {
+/* Topbar Left Brand: FeeFlow */
+.brand-name-only {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 12;
+  text-decoration: none;
+}
+.feeflow-brand-text {
+  font-size: clamp(23px, 2.3vw, 29px);
+  font-weight: 900;
+  letter-spacing: -0.9px;
+  color: #0f172a;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+}
+.feeflow-flow-accent {
+  color: #0284c7;
+  margin-left: 1px;
+}
+.brand-name-only em {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-style: normal;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+/* Topbar Center Logo: SITS Emblem & Name */
+.brand-logo-only {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 18px;
-  text-decoration: none;
+  justify-content: center;
   z-index: 10;
 }
-
-.topbar .sits-logo {
-  width: clamp(230px, 22vw, 300px);
+.topbar-sits-logo {
+  width: clamp(240px, 25vw, 330px);
   height: auto;
   max-height: 64px;
   object-fit: contain;
   filter: drop-shadow(0 1px 3px rgba(15, 23, 42, 0.08));
   transition: transform 0.3s var(--ease-spring);
 }
-
-.topbar .brand:hover .sits-logo {
+.brand-logo-only:hover .topbar-sits-logo {
   transform: scale(1.03);
-}
-
-.topbar .portal-name {
-  border-left: 2px solid #94a3b8;
-  color: #0369a1;
-  font-size: clamp(20px, 1.9vw, 25px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  padding-left: 18px;
-  line-height: 1;
 }
 
 .topbar .account-chip {
@@ -613,7 +635,7 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 12px;
-  z-index: 11;
+  z-index: 12;
 }
 .account-chip {
   display: flex;

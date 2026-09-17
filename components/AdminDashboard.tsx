@@ -248,7 +248,8 @@ export default function AdminDashboard() {
   return (
     <main className="dashboard-shell admin-shell">
       <header className="topbar animate-fade-in">
-        <Brand admin />
+        <Brand onlyName admin />
+        <Brand onlyLogo />
         <div className="account-chip">
           <div className="avatar admin-avatar">A</div>
           <div>
