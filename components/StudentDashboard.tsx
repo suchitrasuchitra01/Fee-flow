@@ -756,6 +756,20 @@ export default function StudentDashboard() {
             <span className="menu-icon">👤</span>
             <span>Profile</span>
           </button>
+          <a
+            href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-menu-btn sidebar-wa-menu-btn"
+            title="Chat on WhatsApp (+91 87123 03032)"
+          >
+            <span className="sidebar-wa-circle-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
+                <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
+              </svg>
+            </span>
+            <span>WhatsApp</span>
+          </a>
           <button type="button" className="sidebar-menu-btn logout-btn" onClick={logout}>
             <span className="menu-icon">🚪</span>
             <span>Logout</span>
@@ -773,6 +787,20 @@ export default function StudentDashboard() {
           </div>
 
           <div className="topbar-right-actions">
+            {/* Portfolio-Style WhatsApp Circle Button */}
+            <a
+              href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="dashboard-portfolio-wa-circle"
+              title="Chat with SITS Support on WhatsApp (+91 87123 03032)"
+              aria-label="Chat on WhatsApp (+91 87123 03032)"
+            >
+              <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true">
+                <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
+              </svg>
+            </a>
+
             <div className="notification-bell-btn" title="Notifications">
               <span className="bell-icon">🔔</span>
               <span className="notif-dot" />
@@ -795,6 +823,23 @@ export default function StudentDashboard() {
             <p className="student-meta-subtitle">
               Student ID: <strong className="monospace">{student.student_id}</strong> • <span>B.Tech (CSE)</span> • <span>3rd Year</span>
             </p>
+          </div>
+
+          <div className="hero-social-col">
+            <a
+              href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="portfolio-circle-badge wa-circle-badge"
+              title="Chat with SITS Support on WhatsApp (+91 87123 03032)"
+            >
+              <span className="badge-circle-icon">
+                <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true">
+                  <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
+                </svg>
+              </span>
+              <span className="badge-circle-label">WhatsApp Helpline</span>
+            </a>
           </div>
         </div>
 
@@ -1026,8 +1071,24 @@ export default function StudentDashboard() {
             )}
             <section className="student-overview">
           <div className="profile-card animate-fade-up stagger-1">
-            <div className="card-label">STUDENT DETAILS</div>
-            <h2>{student.name}</h2>
+            <div className="profile-card-header">
+              <div>
+                <div className="card-label">STUDENT DETAILS</div>
+                <h2>{student.name}</h2>
+              </div>
+              <a
+                href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="profile-wa-circle-btn"
+                title="Connect with SITS Accounts on WhatsApp (+91 87123 03032)"
+                aria-label="Connect on WhatsApp"
+              >
+                <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true">
+                  <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
+                </svg>
+              </a>
+            </div>
             <div className="detail-grid">
               <span>H.T.No <b>{student.student_id}</b></span>
               <span>Email <b>{student.email}</b></span>
@@ -1609,6 +1670,23 @@ export default function StudentDashboard() {
                 <div className="helpdesk-item">
                   <span className="helpdesk-label">Office Hours</span>
                   <strong>Mon – Sat: 9:00 AM – 4:30 PM (Counter closes at 3:30 PM)</strong>
+                </div>
+                <div className="helpdesk-item helpdesk-wa-highlight">
+                  <span className="helpdesk-label">Instant WhatsApp Helpdesk</span>
+                  <a
+                    href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20my%20college%20fee%20payment."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="helpdesk-wa-link"
+                    title="Chat on WhatsApp (+91 87123 03032)"
+                  >
+                    <span className="helpdesk-wa-circle" aria-hidden="true">
+                      <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
+                        <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
+                      </svg>
+                    </span>
+                    <strong>+91 87123 03032 (Chat Live →)</strong>
+                  </a>
                 </div>
               </div>
             </section>
