@@ -3753,12 +3753,24 @@ td small { margin-top: 3px; color: #64748b; }
   font-weight: 600;
 }
 
+.r-card-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
 .r-view-btn {
   width: 100% !important;
   margin: 0 !important;
-  padding: 10px !important;
+  padding: 10px 12px !important;
   font-size: 12.5px !important;
   border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
 }
 
 /* Step 4: Accounts Branch Helpdesk Card */
@@ -6516,24 +6528,25 @@ td small { margin-top: 3px; color: #64748b; }
   gap: 8px;
 }
 .receipt-trash-icon-btn {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  cursor: pointer;
-  color: #ef4444;
-  transition: all 0.18s ease;
-  padding: 0;
+  background: #fff1f2 !important;
+  border: 1.5px solid #fecdd3 !important;
+  border-radius: 6px !important;
+  height: 26px !important;
+  padding: 0 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  color: #e11d48 !important;
+  transition: all 0.18s ease !important;
 }
 .receipt-trash-icon-btn:hover {
-  background: #fee2e2;
-  border-color: #f87171;
-  transform: scale(1.08);
+  background: #ffe4e6 !important;
+  border-color: #f43f5e !important;
+  color: #be123c !important;
+  transform: scale(1.04) !important;
 }
 .r-card-actions {
   display: flex;

@@ -1383,7 +1383,7 @@ export default function StudentDashboard() {
                       }}
                       title="Clear all stored fee receipts"
                     >
-                      <span>🗑️ Clear All ({receipts.length})</span>
+                      <span>🗑️ Delete All Receipts ({receipts.length})</span>
                     </button>
                   )}
                 </div>
@@ -1424,7 +1424,8 @@ export default function StudentDashboard() {
                             title="Delete this fee receipt"
                             aria-label={`Delete receipt ${r.id}`}
                           >
-                            🗑️
+                            <span>🗑️</span>
+                            <span>Delete</span>
                           </button>
                         </div>
                       </div>
