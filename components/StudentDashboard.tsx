@@ -509,10 +509,11 @@ export default function StudentDashboard() {
             target="_blank"
             rel="noopener noreferrer"
             className="topbar-whatsapp-btn"
-            title="WhatsApp Fee Helpline: +91 8712303032"
+            title="Chat on WhatsApp"
+            aria-label="Chat on WhatsApp"
           >
-            <WhatsAppIcon size={16} />
-            <span>+91 8712303032</span>
+            <WhatsAppIcon size={17} />
+            <span>WhatsApp</span>
           </a>
           <div className="avatar">{student.name.charAt(0)}</div>
           <div>
@@ -535,13 +536,13 @@ export default function StudentDashboard() {
               target="_blank"
               rel="noopener noreferrer"
               className="whatsapp-header-pill"
-              title="Chat with SITS Fee Accounts on WhatsApp (+91 8712303032)"
+              title="Chat on WhatsApp"
             >
               <span className="wa-icon-circle">
                 <WhatsAppIcon size={18} />
               </span>
               <span className="wa-pill-text">
-                WhatsApp Help <strong>+91 8712303032</strong>
+                WhatsApp
               </span>
             </a>
             {receipts.length > 0 && (
@@ -1176,11 +1177,11 @@ export default function StudentDashboard() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="helpdesk-item helpdesk-wa-item"
-                  title="Direct WhatsApp Helpline (+91 8712303032)"
+                  title="Direct WhatsApp Support"
                 >
-                  <span className="helpdesk-label">WhatsApp Helpline</span>
+                  <span className="helpdesk-label">WhatsApp Support</span>
                   <strong style={{ display: "flex", alignItems: "center", gap: 6, color: "#16a34a" }}>
-                    <WhatsAppIcon size={16} /> +91 8712303032 (Chat Directly)
+                    <WhatsAppIcon size={16} /> Chat on WhatsApp →
                   </strong>
                 </a>
               </div>

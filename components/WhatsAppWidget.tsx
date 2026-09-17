@@ -20,8 +20,6 @@ export function WhatsAppIcon({ size = 24, className = "" }: { size?: number; cla
 
 export default function WhatsAppWidget() {
   const [hovered, setHovered] = useState(false);
-  const phoneNumber = "+918712303032";
-  const displayPhone = "+91 8712303032";
   const defaultMessage = encodeURIComponent(
     "Hello SITS Accounts Helpdesk, I need help regarding my fee payment on FeeFlow."
   );
@@ -40,8 +38,7 @@ export default function WhatsAppWidget() {
           <span className="wa-status-text">Accounts Branch Helpdesk</span>
         </div>
         <div className="wa-tooltip-body">
-          <p className="wa-tooltip-msg">Have questions regarding fees?</p>
-          <strong className="wa-tooltip-number">{displayPhone}</strong>
+          <p className="wa-tooltip-msg">Have questions regarding your fee payment?</p>
         </div>
         <span className="wa-tooltip-cta">Click to chat on WhatsApp →</span>
       </div>
@@ -52,16 +49,16 @@ export default function WhatsAppWidget() {
         target="_blank"
         rel="noopener noreferrer"
         className="floating-whatsapp-btn"
-        aria-label={`Chat on WhatsApp with SITS Fee Support at ${displayPhone}`}
-        title={`Chat with Accounts Branch on WhatsApp (${displayPhone})`}
+        aria-label="Chat on WhatsApp with SITS Fee Support"
+        title="Chat on WhatsApp"
       >
         <span className="whatsapp-pulse-ring" />
         <span className="whatsapp-icon-circle">
-          <WhatsAppIcon size={30} />
+          <WhatsAppIcon size={28} />
         </span>
         <span className="whatsapp-btn-text">
-          <span>Need Help?</span>
-          <small>Chat with us</small>
+          <span>WhatsApp</span>
+          <small>Instant Chat</small>
         </span>
       </a>
     </div>
