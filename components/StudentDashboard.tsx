@@ -46,6 +46,8 @@ export default function StudentDashboard() {
   const [customAmount, setCustomAmount] = useState<string | null>(null);
   const [feeCategory, setFeeCategory] = useState<"all" | "tuition" | "fine">("all");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"razorpay" | "card" | "upi" | "netbanking">("razorpay");
+  const [studentVpa, setStudentVpa] = useState("");
+  const [isVpaVerified, setIsVpaVerified] = useState(false);
 
   function handlePaySecurely() {
     if (selectedPaymentMethod === "card") {
@@ -929,6 +931,83 @@ export default function StudentDashboard() {
                       </div>
                     </div>
 
+                    {/* Expandable UPI Configuration & Edit Details */}
+                    {selectedPaymentMethod === "upi" && (
+                      <div className="upi-method-subcard animate-fade-in">
+                        <div className="upi-subcard-header">
+                          <div className="upi-receiving-info">
+                            <span className="upi-section-badge">RECEIVING INSTITUTION UPI</span>
+                            <div className="upi-id-display">
+                              <code className="upi-code-val">{vpa}</code>
+                              <span className="upi-payee-name">({payee})</span>
+                            </div>
+                          </div>
+                          <div className="upi-quick-actions">
+                            <button
+                              type="button"
+                              className="upi-inline-edit-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditModal();
+                              }}
+                              title="Edit Institution UPI ID & Payee Name"
+                            >
+                              <span aria-hidden="true">✏️</span>
+                              <span>Edit UPI ID</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="upi-inline-copy-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyUpiId();
+                              }}
+                              title="Copy UPI ID"
+                            >
+                              <span>{copied ? "✓ Copied" : "📋 Copy"}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Student's Personal UPI ID for Collect Request (Optional) */}
+                        <div className="payer-upi-group">
+                          <label htmlFor="student-payer-vpa-input" className="payer-upi-label">
+                            <span>Your UPI ID / VPA (Optional)</span>
+                            <small>For direct UPI payment authorization</small>
+                          </label>
+                          <div className="payer-upi-input-wrap">
+                            <input
+                              id="student-payer-vpa-input"
+                              type="text"
+                              value={studentVpa}
+                              onChange={(e) => {
+                                setStudentVpa(e.target.value);
+                                setIsVpaVerified(false);
+                              }}
+                              placeholder="e.g. mobile@okhdfcbank or yourname@paytm"
+                              className="payer-upi-field"
+                            />
+                            {studentVpa.trim() && (
+                              <button
+                                type="button"
+                                className={`payer-upi-verify-btn ${isVpaVerified ? "verified" : ""}`}
+                                onClick={() => {
+                                  if (studentVpa.includes("@") && studentVpa.length >= 5) {
+                                    setIsVpaVerified(true);
+                                  }
+                                }}
+                              >
+                                {isVpaVerified ? "✓ Verified" : "Verify"}
+                              </button>
+                            )}
+                          </div>
+                          {isVpaVerified && (
+                            <span className="payer-upi-verified-badge">✓ UPI ID verified and linked for checkout</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Method 4: Net Banking */}
                     <div
                       className={`payment-method-item ${selectedPaymentMethod === "netbanking" ? "selected" : ""}`}
@@ -1446,6 +1525,99 @@ export default function StudentDashboard() {
         />
       )}
 
+      {/* Official SITS Edit Receiving UPI ID Modal */}
+      {isEditingUpi && (
+        <div className="modal-overlay animate-fade-in" onClick={() => !savingUpi && setIsEditingUpi(false)}>
+          <div className="modal-card upi-edit-modal-card animate-pop-in" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={() => setIsEditingUpi(false)}
+              disabled={savingUpi}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            <div className="upi-modal-top-icon">
+              <span>✏️</span>
+            </div>
+
+            <h3 className="upi-modal-title">Edit Receiving UPI ID</h3>
+            <p className="upi-modal-desc">
+              Update the official institute UPI ID and payee name. All payment QR codes, deep links, and receipts across the portal will instantly update to route funds to this account.
+            </p>
+
+            <form onSubmit={handleSaveUpi} className="upi-modal-form">
+              <div className="form-group">
+                <label htmlFor="modal-new-vpa">Official UPI ID / VPA *</label>
+                <input
+                  id="modal-new-vpa"
+                  type="text"
+                  value={newVpa}
+                  onChange={(e) => setNewVpa(e.target.value)}
+                  placeholder="e.g. 8688099587@ybl or sits@sbi"
+                  required
+                  className="upi-modal-input"
+                />
+              </div>
+
+              {/* Quick Handle Chips */}
+              <div className="upi-handles-row">
+                <span className="handles-label">Quick handles:</span>
+                {["@ybl", "@axl", "@okaxis", "@okhdfcbank", "@paytm", "@sbi", "@icici"].map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    className="handle-chip"
+                    onClick={() => {
+                      const base = newVpa.includes("@") ? newVpa.split("@")[0] : (newVpa || "8712303032");
+                      setNewVpa(`${base}${h}`);
+                    }}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+
+              <div className="form-group" style={{ marginTop: 14 }}>
+                <label htmlFor="modal-new-payee">Payee Display Name *</label>
+                <input
+                  id="modal-new-payee"
+                  type="text"
+                  value={newPayee}
+                  onChange={(e) => setNewPayee(e.target.value)}
+                  placeholder="e.g. SITS or Siddhartha Institute"
+                  required
+                  className="upi-modal-input"
+                />
+              </div>
+
+              {upiSaveError && <div className="upi-alert error">{upiSaveError}</div>}
+              {upiSaveSuccess && <div className="upi-alert success">{upiSaveSuccess}</div>}
+
+              <div className="upi-modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setIsEditingUpi(false)}
+                  disabled={savingUpi}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={savingUpi}
+                >
+                  {savingUpi ? "Saving..." : "✓ Save UPI ID"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* SITS Unified Multi-Option Payment Gateway Modal */}
       <PaymentGatewayModal
         isOpen={showGatewayModal}
@@ -1457,6 +1629,8 @@ export default function StudentDashboard() {
         payeeUpi={vpa}
         payeeName={payee}
         genericUpiUri={genericUpiUri}
+        initialVpa={studentVpa}
+        onEditPayeeUpi={openEditModal}
         onPaymentSuccess={handleGatewayPaymentSuccess}
       />
     </main>

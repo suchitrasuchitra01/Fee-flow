@@ -18,6 +18,8 @@ interface PaymentGatewayModalProps {
   payeeUpi: string;
   payeeName: string;
   genericUpiUri: string;
+  initialVpa?: string;
+  onEditPayeeUpi?: () => void;
   onPaymentSuccess: (receipt: FeeReceipt, updatedStudent?: Student) => void;
 }
 
@@ -94,14 +96,19 @@ export default function PaymentGatewayModal({
   payeeUpi,
   payeeName,
   genericUpiUri,
+  initialVpa,
+  onEditPayeeUpi,
   onPaymentSuccess,
 }: PaymentGatewayModalProps) {
   const [activeTab, setActiveTab] = useState<PaymentMode>(initialMode);
 
-  // Sync initial tab if changed
+  // Sync initial tab and VPA if changed
   useEffect(() => {
     setActiveTab(initialMode);
-  }, [initialMode, isOpen]);
+    if (initialVpa) {
+      setVpaInput(initialVpa);
+    }
+  }, [initialMode, initialVpa, isOpen]);
 
   // Form states
   const [vpaInput, setVpaInput] = useState("");
@@ -634,7 +641,31 @@ export default function PaymentGatewayModal({
                           <QRCodeSVG value={genericUpiUri} size={156} includeMargin />
                           <small>Scan using Google Pay, PhonePe, Paytm or BHIM</small>
                         </div>
-                        <span className="qr-payee-note">Payee: <strong>{payeeName}</strong> ({payeeUpi})</span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 8 }}>
+                          <span className="qr-payee-note">Payee: <strong>{payeeName}</strong> ({payeeUpi})</span>
+                          {onEditPayeeUpi && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onClose();
+                                onEditPayeeUpi();
+                              }}
+                              style={{
+                                background: "#e0f2fe",
+                                border: "1px solid #bae6fd",
+                                color: "#0284c7",
+                                borderRadius: 6,
+                                padding: "2px 8px",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
+                              title="Edit Receiving UPI ID"
+                            >
+                              ✏️ Edit
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Right: UPI Apps & Manual VPA */}
