@@ -71,6 +71,15 @@ export default function StudentDashboard() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [confirmError, setConfirmError] = useState("");
 
+  // Receipt Deletion & Management state
+  const [receiptToDelete, setReceiptToDelete] = useState<FeeReceipt | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [revertBalanceOnDelete, setRevertBalanceOnDelete] = useState(true);
+  const [deletingReceipt, setDeletingReceipt] = useState(false);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [revertAllOnClear, setRevertAllOnClear] = useState(true);
+  const [clearingAllReceipts, setClearingAllReceipts] = useState(false);
+
   // Step-by-Step Dashboard Workflow state
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
   const [viewMode, setViewMode] = useState<"stepper" | "all">("stepper");
@@ -275,7 +284,152 @@ export default function StudentDashboard() {
     setActiveStep(3);
   }
 
+  function promptDeleteReceipt(r: FeeReceipt) {
+    setReceiptToDelete(r);
+    setRevertBalanceOnDelete(true);
+    setShowDeleteModal(true);
+  }
 
+  async function handleConfirmDelete() {
+    if (!receiptToDelete || !student) return;
+    setDeletingReceipt(true);
+
+    try {
+      const res = await fetch("/api/payments/receipt", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: student.student_id,
+          receipt_id: receiptToDelete.id,
+          amount_paid: receiptToDelete.amount_paid,
+          fee_type: receiptToDelete.fee_type || "all",
+          revert_balance: revertBalanceOnDelete,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.student) {
+        setStudent(data.student);
+      } else if (revertBalanceOnDelete) {
+        setStudent((prev) => {
+          if (!prev) return null;
+          const amt = receiptToDelete.amount_paid;
+          if (receiptToDelete.fee_type === "fine") {
+            return { ...prev, fine_fee: prev.fine_fee + amt };
+          } else {
+            return {
+              ...prev,
+              paid_fee: Math.max(0, prev.paid_fee - amt),
+              due_fee: prev.due_fee + amt,
+            };
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("Delete receipt network error, falling back to local:", err);
+      if (revertBalanceOnDelete) {
+        setStudent((prev) => {
+          if (!prev) return null;
+          const amt = receiptToDelete.amount_paid;
+          if (receiptToDelete.fee_type === "fine") {
+            return { ...prev, fine_fee: prev.fine_fee + amt };
+          } else {
+            return {
+              ...prev,
+              paid_fee: Math.max(0, prev.paid_fee - amt),
+              due_fee: prev.due_fee + amt,
+            };
+          }
+        });
+      }
+    } finally {
+      const updated = receipts.filter((r) => r.id !== receiptToDelete.id);
+      setReceipts(updated);
+      try {
+        localStorage.setItem(`feeflow_receipts_${student.student_id}`, JSON.stringify(updated));
+      } catch {}
+
+      setDeletingReceipt(false);
+      setShowDeleteModal(false);
+      setReceiptToDelete(null);
+      if (selectedReceiptId === receiptToDelete.id) {
+        setShowReceiptModal(false);
+        setSelectedReceiptId(undefined);
+      }
+    }
+  }
+
+  async function handleConfirmClearAll() {
+    if (!student || receipts.length === 0) return;
+    setClearingAllReceipts(true);
+
+    try {
+      const res = await fetch("/api/payments/receipt", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: student.student_id,
+          clear_all: true,
+          revert_balance: revertAllOnClear,
+          receipts_to_revert: receipts.map((r) => ({
+            amount_paid: r.amount_paid,
+            fee_type: r.fee_type || "all",
+          })),
+        }),
+      });
+      const data = await res.json();
+
+      if (data.student) {
+        setStudent(data.student);
+      } else if (revertAllOnClear) {
+        let totalTuition = 0;
+        let totalFine = 0;
+        for (const r of receipts) {
+          if (r.fee_type === "fine") totalFine += r.amount_paid;
+          else totalTuition += r.amount_paid;
+        }
+        setStudent((prev) =>
+          prev
+            ? {
+                ...prev,
+                paid_fee: Math.max(0, prev.paid_fee - totalTuition),
+                due_fee: prev.due_fee + totalTuition,
+                fine_fee: prev.fine_fee + totalFine,
+              }
+            : null
+        );
+      }
+    } catch (err) {
+      console.warn("Clear all receipts network error, falling back to local:", err);
+      if (revertAllOnClear) {
+        let totalTuition = 0;
+        let totalFine = 0;
+        for (const r of receipts) {
+          if (r.fee_type === "fine") totalFine += r.amount_paid;
+          else totalTuition += r.amount_paid;
+        }
+        setStudent((prev) =>
+          prev
+            ? {
+                ...prev,
+                paid_fee: Math.max(0, prev.paid_fee - totalTuition),
+                due_fee: prev.due_fee + totalTuition,
+                fine_fee: prev.fine_fee + totalFine,
+              }
+            : null
+        );
+      }
+    } finally {
+      setReceipts([]);
+      try {
+        localStorage.removeItem(`feeflow_receipts_${student.student_id}`);
+      } catch {}
+      setClearingAllReceipts(false);
+      setShowClearAllModal(false);
+      setShowReceiptModal(false);
+      setSelectedReceiptId(undefined);
+    }
+  }
 
   function openPaymentConfirmation(appName = "UPI App / QR Scanner") {
     const totalDue = student ? student.due_fee + student.fine_fee : 0;
@@ -1219,6 +1373,19 @@ export default function StudentDashboard() {
                   >
                     <span>🧾 Claim Receipt with UTR</span>
                   </button>
+                  {receipts.length > 0 && (
+                    <button
+                      type="button"
+                      className="danger-outline-button clear-all-btn"
+                      onClick={() => {
+                        setRevertAllOnClear(true);
+                        setShowClearAllModal(true);
+                      }}
+                      title="Clear all stored fee receipts"
+                    >
+                      <span>🗑️ Clear All ({receipts.length})</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1248,7 +1415,18 @@ export default function StudentDashboard() {
                           <span className="r-card-badge">Receipt #{receipts.length - idx}</span>
                           <strong className="r-card-id">{r.id}</strong>
                         </div>
-                        <span className="receipt-status-pill">Verified ✓</span>
+                        <div className="r-card-top-right">
+                          <span className="receipt-status-pill">Verified ✓</span>
+                          <button
+                            type="button"
+                            className="receipt-trash-icon-btn"
+                            onClick={() => promptDeleteReceipt(r)}
+                            title="Delete this fee receipt"
+                            aria-label={`Delete receipt ${r.id}`}
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </div>
 
                       <div className="r-card-amount-row">
@@ -1283,6 +1461,14 @@ export default function StudentDashboard() {
                           }}
                         >
                           <span>🖨️ View & Print Official Receipt</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="danger-button r-delete-card-btn"
+                          onClick={() => promptDeleteReceipt(r)}
+                          title="Delete this fee receipt"
+                        >
+                          <span>🗑️ Delete</span>
                         </button>
                       </div>
                     </div>
@@ -1625,7 +1811,186 @@ export default function StudentDashboard() {
           receipts={receipts}
           selectedReceiptId={selectedReceiptId}
           onClose={() => setShowReceiptModal(false)}
+          onDeleteReceipt={(r) => {
+            setShowReceiptModal(false);
+            promptDeleteReceipt(r);
+          }}
         />
+      )}
+
+      {/* Delete Single Receipt Confirmation Modal */}
+      {showDeleteModal && receiptToDelete && (
+        <div className="gateway-modal-backdrop animate-fade-in" style={{ zIndex: 3000 }}>
+          <div className="gateway-modal-dialog" style={{ maxWidth: 500, padding: 0 }}>
+            <div className="delete-modal-header">
+              <div className="delete-header-icon-wrap">
+                <span className="delete-warning-icon">🗑️</span>
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, color: "#991b1b", fontWeight: 800 }}>
+                  Delete Fee Receipt?
+                </h3>
+                <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#64748b" }}>
+                  Permanently remove this receipt acknowledgement.
+                </p>
+              </div>
+            </div>
+
+            <div className="delete-modal-body" style={{ padding: "20px 24px" }}>
+              <div className="delete-receipt-preview-card">
+                <div className="d-preview-row">
+                  <span className="d-label">Receipt Number</span>
+                  <strong className="d-val monospace" style={{ color: "#0f172a" }}>
+                    {receiptToDelete.id}
+                  </strong>
+                </div>
+                <div className="d-preview-row">
+                  <span className="d-label">Amount Paid</span>
+                  <strong className="d-val" style={{ color: "#059669", fontSize: 16 }}>
+                    {currency(receiptToDelete.amount_paid)}
+                  </strong>
+                </div>
+                <div className="d-preview-row">
+                  <span className="d-label">Payment Mode</span>
+                  <span className="d-val font-semibold">{receiptToDelete.payment_mode}</span>
+                </div>
+                {receiptToDelete.utr_number && (
+                  <div className="d-preview-row">
+                    <span className="d-label">UTR / Ref No</span>
+                    <code className="monospace">{receiptToDelete.utr_number}</code>
+                  </div>
+                )}
+                <div className="d-preview-row">
+                  <span className="d-label">Date & Time</span>
+                  <span>{new Date(receiptToDelete.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                </div>
+              </div>
+
+              {/* Revert balance checkbox option */}
+              <label className="delete-revert-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={revertBalanceOnDelete}
+                  onChange={(e) => setRevertBalanceOnDelete(e.target.checked)}
+                  className="custom-calc-checkbox"
+                />
+                <div>
+                  <strong style={{ display: "block", color: "#0f172a", fontSize: 13.5 }}>
+                    Restore {currency(receiptToDelete.amount_paid)} back to Due Balance
+                  </strong>
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                    Reverses this payment from your account and restores your pending fee balance.
+                  </span>
+                </div>
+              </label>
+
+              <div className="delete-warning-pill">
+                <span>⚠️</span>
+                <span>This action cannot be undone once confirmed.</span>
+              </div>
+            </div>
+
+            <div className="delete-modal-actions" style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 12 }}>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setReceiptToDelete(null);
+                }}
+                disabled={deletingReceipt}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger-button confirm-delete-btn"
+                onClick={handleConfirmDelete}
+                disabled={deletingReceipt}
+              >
+                {deletingReceipt ? (
+                  <span>Deleting...</span>
+                ) : (
+                  <span>🗑️ Delete Receipt</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Receipts Confirmation Modal */}
+      {showClearAllModal && (
+        <div className="gateway-modal-backdrop animate-fade-in" style={{ zIndex: 3000 }}>
+          <div className="gateway-modal-dialog" style={{ maxWidth: 500, padding: 0 }}>
+            <div className="delete-modal-header">
+              <div className="delete-header-icon-wrap">
+                <span className="delete-warning-icon">🗑️</span>
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, color: "#991b1b", fontWeight: 800 }}>
+                  Clear All {receipts.length} Fee Receipts?
+                </h3>
+                <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#64748b" }}>
+                  Delete all archived receipt records from your dashboard.
+                </p>
+              </div>
+            </div>
+
+            <div className="delete-modal-body" style={{ padding: "20px 24px" }}>
+              <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#334155" }}>
+                You currently have <strong>{receipts.length}</strong> archived receipt{receipts.length > 1 ? "s" : ""} totaling{" "}
+                <strong>{currency(receipts.reduce((acc, r) => acc + r.amount_paid, 0))}</strong>.
+              </p>
+
+              {/* Revert balance checkbox option */}
+              <label className="delete-revert-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={revertAllOnClear}
+                  onChange={(e) => setRevertAllOnClear(e.target.checked)}
+                  className="custom-calc-checkbox"
+                />
+                <div>
+                  <strong style={{ display: "block", color: "#0f172a", fontSize: 13.5 }}>
+                    Restore all payment amounts back to Due Balance
+                  </strong>
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                    Resets pending fee and paid fee as if these payments were not recorded.
+                  </span>
+                </div>
+              </label>
+
+              <div className="delete-warning-pill">
+                <span>⚠️</span>
+                <span>All {receipts.length} receipts will be permanently removed.</span>
+              </div>
+            </div>
+
+            <div className="delete-modal-actions" style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: 12 }}>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setShowClearAllModal(false)}
+                disabled={clearingAllReceipts}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger-button confirm-delete-btn"
+                onClick={handleConfirmClearAll}
+                disabled={clearingAllReceipts}
+              >
+                {clearingAllReceipts ? (
+                  <span>Clearing Receipts...</span>
+                ) : (
+                  <span>🗑️ Clear All Receipts</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* SITS Unified Multi-Option Payment Gateway Modal */}
