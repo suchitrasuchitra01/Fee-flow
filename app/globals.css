@@ -560,16 +560,60 @@ button { cursor: pointer; }
   background-attachment: fixed;
 }
 .topbar {
-  height: 76px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
+  min-height: 88px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
-  padding: 0 clamp(22px, 7vw, 105px);
+  padding: 0 clamp(20px, 5vw, 60px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
-  transition: box-shadow 0.25s ease;
+  position: relative;
+  box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05);
+  transition: all 0.25s ease;
+}
+
+/* Center & Enlarge Brand Logo */
+.topbar .brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-decoration: none;
+  z-index: 10;
+}
+
+.topbar .sits-logo {
+  width: clamp(230px, 22vw, 300px);
+  height: auto;
+  max-height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(15, 23, 42, 0.08));
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.topbar .brand:hover .sits-logo {
+  transform: scale(1.03);
+}
+
+.topbar .portal-name {
+  border-left: 2px solid #94a3b8;
+  color: #0369a1;
+  font-size: clamp(20px, 1.9vw, 25px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  padding-left: 18px;
+  line-height: 1;
+}
+
+.topbar .account-chip {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 11;
 }
 .account-chip {
   display: flex;
@@ -1677,8 +1721,21 @@ td small { margin-top: 3px; color: #64748b; }
   .mobile-brand { display: flex; }
   .student-overview, .bottom-grid, .admin-layout { grid-template-columns: 1fr; }
   .admin-metrics { grid-template-columns: repeat(2, 1fr); }
-  .dashboard-content { padding: 40px 22px; }
-  .topbar { padding: 0 22px; }
+  .topbar {
+    padding: 14px 20px;
+    flex-direction: column;
+    gap: 10px;
+    height: auto;
+    min-height: auto;
+  }
+  .topbar .brand {
+    position: static;
+    transform: none;
+    margin: 0 auto;
+  }
+  .topbar .account-chip {
+    margin: 0 auto;
+  }
   .fee-grid { grid-template-columns: repeat(2, 1fr); gap: 22px; }
   .fee-item:nth-child(3) { border-left: 0; padding-left: 0; }
   .records-card { overflow: hidden; }
