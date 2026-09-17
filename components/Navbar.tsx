@@ -79,6 +79,23 @@ export default function Navbar({ activePage }: { activePage?: string }) {
 
         {/* Action Button / Profile */}
         <div className="smart-nav-actions">
+          {/* WhatsApp Support Pill in Right Corner */}
+          <a
+            href="https://wa.me/918712303032?text=Hello%20SITS%20Accounts%20Helpdesk,%20I%20have%20an%20inquiry%20regarding%20college%20fees."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="navbar-whatsapp-pill"
+            title="Chat on WhatsApp (+91 8712303032)"
+            aria-label="WhatsApp Support (+91 8712303032)"
+          >
+            <span className="navbar-wa-circle-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
+                <path d="M16 2a13.9 13.9 0 0 0-12 20.9L2 30l7.3-1.9A13.9 13.9 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.9-1.6l-.4-.2-4.4 1.1 1.2-4.3-.3-.4a11.6 11.6 0 1 1 9.4 5.4zm6.4-8.6c-.3-.2-2-.1-2.3-.2-.3-.1-.5-.2-.7.2s-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-2.6-1.6 9.8 9.8 0 0 1-1.8-2.2c-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.3 1.4 3.5 2.4 3.7 5.8 5.1c.8.4 1.4.6 1.9.7.8.3 1.6.2 2.2.1.7-.1 2-.8 2.3-1.6s.3-1.5.2-1.6c-.1-.2-.3-.3-.6-.5z" />
+              </svg>
+            </span>
+            <span className="navbar-wa-text">+91 8712303032</span>
+          </a>
+
           <Link
             href={userRole === "admin" ? "/admin" : (userRole === "student" ? "/student" : "/student")}
             className="user-avatar-btn"

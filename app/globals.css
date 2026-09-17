@@ -6730,138 +6730,193 @@ td small { margin-top: 3px; color: #64748b; }
 }
 
 /* ==========================================================================
-   Floating Circular WhatsApp Support Button
+   Floating Circular WhatsApp Support Button with Visible Phone Number
    ========================================================================== */
-.whatsapp-float-wrapper {
+.whatsapp-float-container {
   position: fixed;
-  bottom: 26px;
-  right: 26px;
+  bottom: 24px;
+  right: 24px;
   z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 
-.whatsapp-float-btn {
+.whatsapp-float-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #0f172a;
+  padding: 6px 18px 6px 6px;
+  border-radius: 40px;
+  text-decoration: none;
+  box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.4), 0 4px 12px rgba(37, 211, 102, 0.35);
+  border: 1.5px solid rgba(37, 211, 102, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.whatsapp-float-pill:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.5), 0 6px 18px rgba(37, 211, 102, 0.5);
+  border-color: #25D366;
+  background: #020617;
+}
+
+.wa-circle-icon-badge {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  text-decoration: none;
-  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.45);
 }
 
-.whatsapp-float-btn:hover {
-  transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 10px 28px rgba(37, 211, 102, 0.6), 0 4px 10px rgba(0, 0, 0, 0.18);
-  background: linear-gradient(135deg, #2ae06e 0%, #169c8d 100%);
-}
-
-.whatsapp-float-btn:active {
-  transform: scale(0.95);
-}
-
-.whatsapp-icon {
-  width: 34px;
-  height: 34px;
+.wa-icon-svg {
+  width: 28px;
+  height: 28px;
   color: #ffffff;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-/* Pulsing ambient ring */
-.whatsapp-ping-ring {
+.wa-ping-animation {
   position: absolute;
   top: -4px;
   left: -4px;
   right: -4px;
   bottom: -4px;
   border-radius: 50%;
-  border: 2.5px solid #25D366;
+  border: 2px solid #25D366;
   opacity: 0.8;
   animation: waPulse 2.4s cubic-bezier(0.24, 0, 0.38, 1) infinite;
   pointer-events: none;
 }
 
-@keyframes waPulse {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.85;
-  }
-  65% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-}
-
-/* Tooltip card on hover */
-.whatsapp-tooltip {
-  background: #0f172a;
-  color: #ffffff;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  font-weight: 600;
+.wa-pill-text-block {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.28);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(10px);
-  transition: all 0.25s ease;
-  white-space: nowrap;
-  pointer-events: none;
+  justify-content: center;
+  line-height: 1.25;
 }
 
-.whatsapp-tooltip.visible,
-.whatsapp-float-wrapper:hover .whatsapp-tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
+.wa-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.whatsapp-tooltip .whatsapp-number {
-  color: #86efac;
+.wa-online-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.wa-tag-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Hide when printing receipts or invoices */
+.wa-phone-number {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  font-family: inherit;
+}
+
+.whatsapp-float-pill:hover .wa-phone-number {
+  color: #4ade80;
+}
+
+/* Hide on print */
 @media print {
-  .whatsapp-float-wrapper {
+  .whatsapp-float-container {
     display: none !important;
   }
 }
 
-/* Mobile positioning */
-@media (max-width: 640px) {
-  .whatsapp-float-wrapper {
-    bottom: 18px;
-    right: 18px;
-  }
-  .whatsapp-float-btn {
-    width: 52px;
-    height: 52px;
-  }
-  .whatsapp-icon {
-    width: 28px;
-    height: 28px;
-  }
-  .whatsapp-tooltip {
+/* Navbar WhatsApp Pill in Top-Right Corner */
+.navbar-whatsapp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 24px;
+  color: #15803d;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.1);
+}
+
+.navbar-whatsapp-pill:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.18);
+}
+
+.navbar-wa-circle-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(37, 211, 102, 0.35);
+}
+
+.navbar-wa-text {
+  letter-spacing: 0.3px;
+  font-family: monospace, sans-serif;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .navbar-wa-text {
     display: none;
+  }
+  .navbar-whatsapp-pill {
+    padding: 6px;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 640px) {
+  .whatsapp-float-container {
+    bottom: 16px;
+    right: 16px;
+  }
+  .whatsapp-float-pill {
+    padding: 5px 12px 5px 5px;
+    gap: 8px;
+  }
+  .wa-circle-icon-badge {
+    width: 40px;
+    height: 40px;
+  }
+  .wa-icon-svg {
+    width: 22px;
+    height: 22px;
+  }
+  .wa-phone-number {
+    font-size: 12.5px;
   }
 }
 
