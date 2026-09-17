@@ -10,6 +10,7 @@ import Link from "next/link";
 import Brand from "@/components/Brand";
 import FeeReceiptModal from "@/components/FeeReceiptModal";
 import PaymentGatewayModal, { PaymentMode } from "@/components/PaymentGatewayModal";
+import { launchRazorpayCheckout } from "@/lib/razorpay";
 
 type AppInfo = {
   id: string;
@@ -46,19 +47,8 @@ export default function StudentDashboard() {
   const [customAmount, setCustomAmount] = useState<string | null>(null);
   const [feeCategory, setFeeCategory] = useState<"all" | "tuition" | "fine">("all");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"razorpay" | "card" | "upi" | "netbanking">("razorpay");
-
-  function handlePaySecurely() {
-    if (selectedPaymentMethod === "card") {
-      openGatewayModal("debit");
-    } else if (selectedPaymentMethod === "upi") {
-      openGatewayModal("upi");
-    } else if (selectedPaymentMethod === "netbanking") {
-      openGatewayModal("netbanking");
-    } else {
-      // Razorpay All-in-One
-      openGatewayModal("upi");
-    }
-  }
+  const [razorpayLoading, setRazorpayLoading] = useState(false);
+  const [razorpayError, setRazorpayError] = useState("");
 
   // Fee Receipt & Payment Confirmation state
   const [receipts, setReceipts] = useState<FeeReceipt[]>([]);
@@ -600,6 +590,44 @@ export default function StudentDashboard() {
       setCustomAmount(student ? String(student.due_fee) : "0");
     } else {
       setCustomAmount(null);
+    }
+  }
+
+  async function handlePaySecurely() {
+    setRazorpayError("");
+    if (selectedPaymentMethod === "card") {
+      openGatewayModal("debit");
+    } else if (selectedPaymentMethod === "upi") {
+      openGatewayModal("upi");
+    } else if (selectedPaymentMethod === "netbanking") {
+      openGatewayModal("netbanking");
+    } else {
+      // Razorpay All-in-One Checkout with user's test keys
+      if (!student || !hasValidAmount || numericAmount <= 0) {
+        setRazorpayError("Please enter or select a valid payment amount greater than ₹0.");
+        return;
+      }
+      setRazorpayLoading(true);
+      const success = await launchRazorpayCheckout({
+        student,
+        amount: numericAmount,
+        feeType: feeCategory,
+        onSuccess: (receipt, updatedStudent) => {
+          setRazorpayLoading(false);
+          handleGatewayPaymentSuccess(receipt, updatedStudent);
+        },
+        onError: (errMsg) => {
+          setRazorpayLoading(false);
+          setRazorpayError(errMsg);
+          openGatewayModal("upi");
+        },
+        onDismiss: () => {
+          setRazorpayLoading(false);
+        },
+      });
+      if (!success) {
+        setRazorpayLoading(false);
+      }
     }
   }
 
@@ -1231,7 +1259,10 @@ export default function StudentDashboard() {
                         <div className={`custom-radio ${selectedPaymentMethod === "razorpay" ? "checked" : ""}`}>
                           <div className="radio-dot" />
                         </div>
-                        <span className="method-title">Razorpay (UPI / Card / Net Banking)</span>
+                        <div className="method-title-group">
+                          <span className="method-title">Razorpay (UPI / Card / Net Banking)</span>
+                          <span className="rzp-test-tag">⚡ Official Test Gateway Ready</span>
+                        </div>
                       </div>
                       <div className="method-badges">
                         <RazorpayBadge />
@@ -1296,21 +1327,40 @@ export default function StudentDashboard() {
                     </div>
                   </div>
 
+                  {razorpayError && (
+                    <div className="alert-banner alert-warning" style={{ margin: "12px 0 0" }}>
+                      <span>⚠️ {razorpayError}</span>
+                    </div>
+                  )}
+
                   {/* Big Blue Pay Securely Button */}
                   <button
                     type="button"
-                    className="pay-securely-btn"
+                    className={`pay-securely-btn ${razorpayLoading ? "btn-loading" : ""}`}
                     onClick={handlePaySecurely}
-                    disabled={!hasValidAmount}
+                    disabled={!hasValidAmount || razorpayLoading}
                   >
-                    <span className="lock-icon" aria-hidden="true">🔒</span>
-                    <span>Pay Securely {hasValidAmount ? currency(numericAmount) : ""}</span>
+                    {razorpayLoading ? (
+                      <>
+                        <span className="spinner-icon">⏳</span>
+                        <span>Opening Razorpay Secure Gateway...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="lock-icon" aria-hidden="true">🔒</span>
+                        <span>Pay Securely {hasValidAmount ? currency(numericAmount) : ""}</span>
+                      </>
+                    )}
                   </button>
 
                   {/* 256-Bit SSL Encryption Pill */}
                   <div className="payment-security-pill">
                     <span className="security-icon" aria-hidden="true">🛡️</span>
-                    <span>Your payment is secured with 256-bit SSL encryption.</span>
+                    <span>
+                      {selectedPaymentMethod === "razorpay"
+                        ? "Live Razorpay Test Gateway connected (Key: rzp_test_Td0oxwFymxYPOM)."
+                        : "Your payment is secured with 256-bit SSL encryption."}
+                    </span>
                   </div>
 
                   {/* Offline/Manual UTR Claim Link */}
@@ -1373,19 +1423,25 @@ export default function StudentDashboard() {
                   >
                     <span>🧾 Claim Receipt with UTR</span>
                   </button>
-                  {receipts.length > 0 && (
-                    <button
-                      type="button"
-                      className="danger-outline-button clear-all-btn"
-                      onClick={() => {
-                        setRevertAllOnClear(true);
-                        setShowClearAllModal(true);
-                      }}
-                      title="Clear all stored fee receipts"
-                    >
-                      <span>🗑️ Delete All Receipts ({receipts.length})</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="danger-outline-button clear-receipts-btn"
+                    onClick={() => {
+                      if (receipts.length === 0) {
+                        alert("There are no fee receipts to clear yet.");
+                        return;
+                      }
+                      setRevertAllOnClear(true);
+                      setShowClearAllModal(true);
+                    }}
+                    title={receipts.length > 0 ? `Clear all ${receipts.length} stored fee receipts` : "No receipts to clear"}
+                    aria-label="Clear all fee receipts"
+                  >
+                    <span>🗑️ Clear</span>
+                    {receipts.length > 0 && (
+                      <span className="clear-count-tag">({receipts.length})</span>
+                    )}
+                  </button>
                 </div>
               </div>
 

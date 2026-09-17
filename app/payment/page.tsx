@@ -10,6 +10,7 @@ import FeeReceiptModal from "@/components/FeeReceiptModal";
 import { createClient } from "@/lib/supabase/client";
 import { Student, FeeReceipt } from "@/lib/types";
 import { currency } from "@/lib/utils";
+import { launchRazorpayCheckout } from "@/lib/razorpay";
 
 // Brand badges matching Page 6
 function RazorpayBadge() {
@@ -61,6 +62,8 @@ export default function PaymentPage() {
   const [gatewayMode, setGatewayMode] = useState<PaymentMode>("upi");
   const [latestReceipt, setLatestReceipt] = useState<FeeReceipt | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [razorpayLoading, setRazorpayLoading] = useState(false);
+  const [razorpayError, setRazorpayError] = useState("");
 
   useEffect(() => {
     async function loadStudent() {
@@ -91,17 +94,43 @@ export default function PaymentPage() {
     loadStudent();
   }, [paramAmount]);
 
-  function handlePaySecurely() {
-    if (selectedMethod === "card") {
-      setGatewayMode("debit");
-    } else if (selectedMethod === "upi") {
-      setGatewayMode("upi");
-    } else if (selectedMethod === "netbanking") {
-      setGatewayMode("netbanking");
+  async function handlePaySecurely() {
+    setRazorpayError("");
+    if (selectedMethod === "razorpay") {
+      setRazorpayLoading(true);
+      const success = await launchRazorpayCheckout({
+        student: activeStudent,
+        amount: amount,
+        feeType: "all",
+        onSuccess: (receipt) => {
+          setRazorpayLoading(false);
+          handlePaymentSuccess(receipt);
+        },
+        onError: (errMsg) => {
+          setRazorpayLoading(false);
+          setRazorpayError(errMsg);
+          // Auto fallback to gateway modal if script fails or blocked
+          setGatewayMode("upi");
+          setShowGatewayModal(true);
+        },
+        onDismiss: () => {
+          setRazorpayLoading(false);
+        },
+      });
+
+      if (!success) {
+        setRazorpayLoading(false);
+      }
     } else {
-      setGatewayMode("upi"); // Razorpay all-in-one default
+      if (selectedMethod === "card") {
+        setGatewayMode("debit");
+      } else if (selectedMethod === "upi") {
+        setGatewayMode("upi");
+      } else if (selectedMethod === "netbanking") {
+        setGatewayMode("netbanking");
+      }
+      setShowGatewayModal(true);
     }
-    setShowGatewayModal(true);
   }
 
   function handlePaymentSuccess(receipt: FeeReceipt) {
@@ -207,9 +236,14 @@ export default function PaymentPage() {
                     <span className="custom-radio">
                       {selectedMethod === "razorpay" && <span className="radio-dot" />}
                     </span>
-                    <span className="method-title">
-                      Razorpay (UPI / Card / Net Banking)
-                    </span>
+                    <div className="method-title-group">
+                      <span className="method-title">
+                        Razorpay (UPI / Card / Net Banking)
+                      </span>
+                      <span className="rzp-test-tag">
+                        ⚡ Official Test Gateway Ready
+                      </span>
+                    </div>
                   </div>
                   <div className="method-badges">
                     <RazorpayBadge />
@@ -276,20 +310,40 @@ export default function PaymentPage() {
                 </label>
               </div>
 
+              {razorpayError && (
+                <div className="alert-banner alert-warning" style={{ margin: "12px 0 0" }}>
+                  <span>⚠️ {razorpayError} (You can also pay via card, UPI, or net banking below)</span>
+                </div>
+              )}
+
               {/* Big Blue Pay Securely Button */}
               <button
                 type="button"
-                className="pay-securely-btn"
+                className={`pay-securely-btn ${razorpayLoading ? "btn-loading" : ""}`}
+                disabled={razorpayLoading}
                 onClick={handlePaySecurely}
               >
-                <span className="lock-icon">🔒</span>
-                <span>Pay Securely {currency(amount)}</span>
+                {razorpayLoading ? (
+                  <>
+                    <span className="spinner-icon">⏳</span>
+                    <span>Opening Razorpay Secure Gateway...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="lock-icon">🔒</span>
+                    <span>Pay Securely {currency(amount)}</span>
+                  </>
+                )}
               </button>
 
               {/* Security Pill */}
               <div className="payment-security-pill">
                 <span className="security-icon">🛡️</span>
-                <span>Your payment is secured with 256-bit SSL encryption.</span>
+                <span>
+                  {selectedMethod === "razorpay"
+                    ? "Live Razorpay Test Gateway connected (Key: rzp_test_Td0oxwFymxYPOM)."
+                    : "Your payment is secured with 256-bit SSL encryption."}
+                </span>
               </div>
             </div>
           </div>

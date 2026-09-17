@@ -3632,6 +3632,47 @@ td small { margin-top: 3px; color: #64748b; }
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.receipts-section-actions .secondary-button,
+.receipts-section-actions .clear-receipts-btn,
+.receipts-section-actions .clear-all-btn {
+  margin-top: 0 !important;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 16px;
+  line-height: 1;
+}
+
+.receipts-section-actions .clear-receipts-btn {
+  background: #fff5f5;
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.receipts-section-actions .clear-receipts-btn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #991b1b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.receipts-section-actions .clear-receipts-btn .clear-count-tag {
+  background: #fecaca;
+  color: #991b1b;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 800;
 }
 
 .empty-receipts-box {
