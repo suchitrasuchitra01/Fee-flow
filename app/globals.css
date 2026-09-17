@@ -1,6 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
 
 :root {
+  --font-display: 'Plus Jakarta Sans', 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --ink: #0f172a;
   --muted: #64748b;
   --line: #e2e8f0;
@@ -28,7 +30,7 @@ body {
   margin: 0;
   background: #f8fafc;
   color: var(--ink);
-  font-family: Manrope, Arial, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 button, input { font: inherit; }
@@ -312,8 +314,9 @@ button { cursor: pointer; }
 .eyebrow {
   margin: 0 0 11px;
   color: var(--primary);
-  font: 500 10px 'DM Mono', monospace;
-  letter-spacing: 1.3px;
+  font: 700 11px var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .auth-intro .eyebrow {
   color: #0369a1;
@@ -326,8 +329,8 @@ button { cursor: pointer; }
 }
 .intro-content h1 {
   margin: 0;
-  font: 700 clamp(48px, 6vw, 76px)/0.98 'Playfair Display', Georgia, serif;
-  letter-spacing: -2px;
+  font: 800 clamp(44px, 5.5vw, 68px)/1.05 var(--font-display);
+  letter-spacing: -0.03em;
   color: #0f172a;
 }
 .intro-content p:not(.eyebrow) {
@@ -420,8 +423,8 @@ button { cursor: pointer; }
 }
 .login-card h2 {
   margin: 0 0 9px;
-  font: 700 30px/1.2 'Playfair Display', Georgia, serif;
-  letter-spacing: -0.7px;
+  font: 800 28px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
 }
 .muted {
   color: var(--muted);
@@ -680,8 +683,8 @@ button { cursor: pointer; }
   padding: 58px 32px 70px;
 }
 .dashboard-content > h1 {
-  font: 700 38px/1.15 'Playfair Display', Georgia, serif;
-  letter-spacing: -1px;
+  font: 800 34px/1.2 var(--font-display);
+  letter-spacing: -0.03em;
   margin: 0 0 8px;
 }
 
@@ -706,13 +709,15 @@ button { cursor: pointer; }
 }
 .profile-card { padding: 28px; }
 .card-label {
-  font: 600 10px 'DM Mono', monospace;
-  letter-spacing: 1px;
+  font: 700 11px var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: #64748b;
 }
 .profile-card h2 {
-  font: 700 25px 'Playfair Display', Georgia, serif;
-  margin: 19px 0 27px;
+  font: 800 24px/1.25 var(--font-display);
+  margin: 18px 0 24px;
+  letter-spacing: -0.02em;
 }
 .detail-grid { display: flex; gap: 55px; }
 .detail-grid span {
@@ -747,20 +752,29 @@ button { cursor: pointer; }
 }
 .balance-amount {
   display: block;
-  font: 700 31px 'Playfair Display', Georgia, serif;
-  margin-top: 17px;
-  letter-spacing: -0.5px;
+  font: 800 clamp(32px, 3.2vw, 40px)/1.1 var(--font-display);
+  margin-top: 14px;
+  letter-spacing: -0.03em;
+  color: #0f172a;
 }
-.balance-caption { font-size: 12px; color: var(--muted); }
+.balance-caption {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 4px;
+}
 .status-pill {
-  display: inline-block;
-  margin-top: 16px;
-  padding: 5px 11px;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 4px 10px;
   border-radius: 20px;
   color: #c2410c;
   background: #fff7ed;
   border: 1px solid #ffedd5;
-  font: 600 10px 'DM Mono', monospace;
+  font: 700 11px var(--font-display);
+  letter-spacing: 0.02em;
   transition: all 0.25s ease;
 }
 .has-due .status-pill {
@@ -786,9 +800,9 @@ button { cursor: pointer; }
   gap: 15px;
 }
 .section-heading h2 {
-  font: 700 22px 'Playfair Display', Georgia, serif;
+  font: 800 22px/1.25 var(--font-display);
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
 }
 .fee-grid {
   display: grid;
@@ -812,8 +826,8 @@ button { cursor: pointer; }
 .fee-item strong {
   display: block;
   margin-top: 7px;
-  font-size: 19px;
-  letter-spacing: -0.3px;
+  font: 800 20px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
 }
 .fee-item.success strong, .success-text { color: #0369a1; }
 .fee-item.warning strong, .warning-text { color: #b65821; }
@@ -827,8 +841,9 @@ button { cursor: pointer; }
   margin-top: 18px;
 }
 .pay-card h2, .insight-card h2 {
-  font: 700 21px 'Playfair Display', Georgia, serif;
+  font: 800 21px/1.25 var(--font-display);
   margin: 0 0 13px;
+  letter-spacing: -0.02em;
 }
 .insight-card {
   padding: 24px 28px;
@@ -1560,10 +1575,10 @@ button { cursor: pointer; }
   box-shadow: var(--shadow-hover);
 }
 .metric strong {
-  font: 700 24px 'Playfair Display', Georgia, serif;
+  font: 800 24px/1.2 var(--font-display);
   display: block;
   margin-top: 8px;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.02em;
 }
 .metric-success {
   border-bottom: 3px solid #7dd3fc;
@@ -2105,9 +2120,9 @@ td small { margin-top: 3px; color: #64748b; }
 }
 .receipt-institute-info h2 {
   margin: 0 0 4px;
-  font: 800 20px/1.2 'Playfair Display', Georgia, serif;
+  font: 800 20px/1.2 var(--font-display);
   color: #0369a1;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.02em;
 }
 .receipt-subline {
   margin: 0 0 4px;
@@ -3306,16 +3321,16 @@ td small { margin-top: 3px; color: #64748b; }
 }
 .fine-label {
   display: block;
-  font: 600 11px 'DM Mono', monospace;
+  font: 700 11px var(--font-display);
   text-transform: uppercase;
   color: #64748b;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 .fine-number {
   display: block;
-  font: 800 28px 'Outfit', sans-serif;
+  font: 800 28px/1.1 var(--font-display);
   margin: 1px 0;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 .pay-fine-action-btn {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
